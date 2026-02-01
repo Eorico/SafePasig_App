@@ -1,14 +1,14 @@
 import { Tabs } from 'expo-router';
 import { Map, AlertCircle, Phone, FileText } from 'lucide-react-native';
-import { View } from 'react-native';
 import { _layoutStyles } from '@/appStyles/_layout.style';
+import { SosTabButton } from '@/components/sos.button';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#DC2626',
+        tabBarActiveTintColor: '#2678dc',
         tabBarInactiveTintColor: '#6B7280',
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
@@ -43,17 +43,7 @@ export default function TabLayout() {
         name="sos"
         options={{
           title: 'SOS',
-          tabBarIcon: ({ size, color }) => (
-            <View style={_layoutStyles.sosIcon}>
-              <View
-                style={[
-                  _layoutStyles.sosIconInner,
-                  { backgroundColor: color === '#DC2626' ? '#DC2626' : '#6B7280' },
-                ]}>
-                <AlertCircle size={28} color="#FFFFFF" />
-              </View>
-            </View>
-          ),
+          tabBarButton: (props) => <SosTabButton {...props} />,
         }}
       />
       <Tabs.Screen

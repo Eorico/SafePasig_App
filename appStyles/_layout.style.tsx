@@ -2,11 +2,11 @@ import { StyleSheet } from "react-native";
 
 export const _layoutStyles = StyleSheet.create({
   sosIcon: {
-    marginTop: -20,
+    marginTop: -50,
   },
   sosIconInner: {
-    width: 56,
-    height: 56,
+    width: 58,
+    height: 58,
     borderRadius: 28,
     justifyContent: 'center',
     alignItems: 'center',

@@ -10,7 +10,7 @@ export default function RootLayout() {
     <>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(drawer-settings)" />
-        <Stack.Screen name="(not-found)" />
+        <Stack.Screen name="not.found" />
       </Stack>
       <StatusBar style="auto" />
     </>
