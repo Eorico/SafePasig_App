@@ -103,15 +103,16 @@ export const mapStyles = StyleSheet.create({
   zoomControls: {
     position: 'absolute',
     right: 16,
-    bottom: 100,
+    bottom: 250,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.15,
     shadowRadius: 3,
-    elevation: 3,
+    elevation: 20,
     overflow: 'hidden',
+    zIndex: 20
   },
   zoomButton: {
     width: 44,
@@ -185,4 +186,8 @@ export const mapStyles = StyleSheet.create({
     color: '#059669',
     fontWeight: '600',
   },
+  mapWrapper: {
+    flex: 1,
+    position: 'relative',
+  }
 });
