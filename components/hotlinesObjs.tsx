@@ -1,0 +1,42 @@
+export const hotlines = [
+  {
+    id: 1,
+    name: 'Emergency Hotline',
+    number: '911',
+    category: 'Police',
+    available: '24/7',
+    color: '#3B82F6',
+  },
+  {
+    id: 2,
+    name: 'NDRRMC',
+    number: '(02) 911-1406',
+    category: 'Disaster',
+    available: '24/7',
+    color: '#DC2626',
+  },
+  {
+    id: 3,
+    name: 'Bureau of Fire Protection',
+    number: '(02) 426-0219',
+    category: 'Fire',
+    available: '24/7',
+    color: '#F97316',
+  },
+  {
+    id: 4,
+    name: 'Philippine Red Cross',
+    number: '143',
+    category: 'Medical',
+    available: '24/7',
+    color: '#DC2626',
+  },
+  {
+    id: 5,
+    name: 'PNP Emergency',
+    number: '117',
+    category: 'Police',
+    available: '24/7',
+    color: '#3B82F6',
+  },
+];

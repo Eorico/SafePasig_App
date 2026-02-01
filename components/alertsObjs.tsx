@@ -1,0 +1,48 @@
+import { AlertTriangle, Droplets, Wind, Flame } from 'lucide-react-native';
+
+export const alerts = [
+  {
+    id: 1,
+    type: 'critical',
+    title: 'CRITICAL ALERT',
+    category: 'General',
+    description: 'Active disasters in your area. Check alerts below and follow evacuation instructions if necessary.',
+    icon: AlertTriangle,
+    color: '#DC2626',
+    location: null,
+    time: null,
+  },
+  {
+    id: 2,
+    type: 'flood',
+    title: 'Flash Flood Warning',
+    category: 'CRITICAL - FLOOD',
+    description: 'Heavy rainfall has caused flash flooding in low-lying areas. Evacuate immediately if you are in affected zones.',
+    icon: Droplets,
+    color: '#DC2626',
+    location: 'Pasig River Area',
+    time: '2 mins ago',
+  },
+  {
+    id: 3,
+    type: 'typhoon',
+    title: 'Typhoon Approaching',
+    category: 'HIGH - TYPHOON',
+    description: 'Typhoon "Maring" is expected to make landfall in 6 hours. Wind speeds up to 150 km/h. Seek shelter immediately.',
+    icon: Wind,
+    color: '#F97316',
+    location: 'Metro Manila',
+    time: '15 mins ago',
+  },
+  {
+    id: 4,
+    type: 'fire',
+    title: 'Fire Incident',
+    category: 'MODERATE - FIRE',
+    description: 'Fire reported in residential area. Fire trucks en route. Avoid the area.',
+    icon: Flame,
+    color: '#F59E0B',
+    location: 'Barangay Ugong',
+    time: '32 mins ago',
+  },
+];
