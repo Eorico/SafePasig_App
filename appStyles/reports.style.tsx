@@ -18,7 +18,7 @@ export const reportsStyles = StyleSheet.create({
     marginBottom: 20,
   },
   submitCard: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#0922b1',
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
