@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import Header from '@/components/header';
-import { X, CloudRain, CloudCheck, Sun } from 'lucide-react-native';
+import { X, CloudRain, Sun } from 'lucide-react-native';
 import { alerts } from '@/components/alertsObjs';
 import { alertStyles } from '@/appStyles/alerts.style';
 import { useNavigation } from 'expo-router';
