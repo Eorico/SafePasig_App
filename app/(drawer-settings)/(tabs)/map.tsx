@@ -5,9 +5,59 @@ import { mapStyles } from '@/appStyles/map.style';
 import { useNavigation } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
 import { pasigGovBuildings } from '@/components/mapsObj';
+import * as Location from 'expo-location';
+import { useEffect, useRef, useState } from 'react';
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
+  const [userLoc, setUserLoc] = useState<any>(null);
+  const mapRef = useRef<MapView>(null);
+
+  useEffect(() => {
+    (async () => {
+      const {status} = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Location permision denied');
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.High,
+      });
+
+      const coordinations = {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      };
+
+      setUserLoc(coordinations);
+
+      mapRef.current?.animateToRegion({
+        ...coordinations,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      });
+
+    })();
+  },[]);
+
+  const zoomIn = async () => {
+    const camera = await mapRef.current?.getCamera();
+    mapRef.current?.animateCamera({
+      ...camera,
+      zoom: (camera?.zoom || 0) + 1,
+    }); 
+  }
+
+  const zoomOut = async () => {
+    const camera = await mapRef.current?.getCamera();
+    mapRef.current?.animateCamera({
+      ...camera,
+      zoom: (camera?.zoom || 0) - 1,
+    }); 
+  }
+
+
   return (
     <View style={mapStyles.container}>
 
@@ -15,14 +65,40 @@ export default function MapScreen() {
       
       <View style={mapStyles.mapWrapper}>
         <MapView
+          provider='google'
+          ref={mapRef}
+          minDelta={0.001}
+          maxDelta={0.01}
           style={mapStyles.mapContainer}
           initialRegion={{
             latitude: 14.5767,
             longitude: 121.0851,
-            latitudeDelta: 0.02,
-            longitudeDelta: 0.02
+            latitudeDelta: 0.002,
+            longitudeDelta: 0.002
           }}
-        >
+        > 
+
+          {userLoc && (
+            <Marker
+              coordinate={userLoc}
+              title='You'
+            >
+
+              <View
+                style={{
+                  width: 16, 
+                  height: 16,
+                  borderRadius: 8,
+                  backgroundColor: '#3B82F6',
+                  borderWidth: 3,
+                  borderColor: '#fff'
+                }}
+              >
+
+              </View>
+
+            </Marker>
+          )}
 
           {pasigGovBuildings.map((build, idx) => (
             <Marker
@@ -32,18 +108,36 @@ export default function MapScreen() {
               description={build.description}
             >
 
-              <View
-                style={{
-                  backgroundColor: '#DC2626',
-                  padding: 4,
-                  borderRadius: 20,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                <View>
-                  <Building color={'white'} size={24}/>
+              <View style={{ alignItems: 'center' }}>
+    
+                <View
+                  style={{
+                    backgroundColor: '#DC2626',
+                    width: 24,
+                    height: 24,
+                    borderRadius: 20,
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    elevation: 6,
+                  }}
+                >
+                  <Building color="white" size={15} />
                 </View>
+
+   
+                <View
+                  style={{
+                    width: 0,
+                    height: 0,
+                    borderLeftWidth: 8,
+                    borderRightWidth: 8,
+                    borderTopWidth: 12,
+                    borderLeftColor: 'transparent',
+                    borderRightColor: 'transparent',
+                    borderTopColor: '#DC2626',
+                    marginTop: -5,
+                  }}
+                />
               </View>
 
             </Marker>
@@ -52,19 +146,30 @@ export default function MapScreen() {
         </MapView>
 
 
-        <TouchableOpacity style={mapStyles.locationButton}>
+        <TouchableOpacity 
+          style={mapStyles.locationButton}
+          onPress={() => {
+            if (userLoc) {
+              mapRef.current?.animateToRegion({
+                ...userLoc,
+                latitudeDelta: 0.002,
+                longitudeDelta: 0.002,
+              })
+            }
+          }}
+          >
           <MapPin size={20} color={'#3B82F6'}/>
         </TouchableOpacity>
 
         <View style={mapStyles.zoomControls}>
 
-          <TouchableOpacity style={mapStyles.zoomButton}>
+          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomIn}>
             <Plus size={20} color={'#3B82F6'}/>
           </TouchableOpacity>
 
           <View style={mapStyles.zoomDivider}/>
 
-          <TouchableOpacity style={mapStyles.zoomButton}>
+          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomOut}>
             <Minus size={20} color={'#3B82F6'}/>
           </TouchableOpacity>
 
