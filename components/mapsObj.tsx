@@ -78,27 +78,9 @@ export const pasigGovBuildings = [
     },
 
     {
-        title: 'Kalawaan Barangay',
-        description: 'Barangay Hall',
-        coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
-    },
-
-    {
-        title: 'Kalawaan Barangay',
-        description: 'Barangay Hall',
-        coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
-    },
-
-    {
-        title: 'Kalawaan Barangay',
-        description: 'Barangay Hall',
-        coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
-    },
-
-    {
-        title: 'Kalawaan Barangay',
-        description: 'Barangay Hall',
-        coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
-    },
+        title: 'Pasig City Science High School',
+        description: 'School',
+        coordinate: { latitude: 14.5751453, longitude: 121.0965457 }
+    }
 
 ]
