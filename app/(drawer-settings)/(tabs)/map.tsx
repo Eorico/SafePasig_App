@@ -13,6 +13,8 @@ export default function MapScreen() {
   const [userLoc, setUserLoc] = useState<any>(null);
   const mapRef = useRef<MapView>(null);
 
+  const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
+
   useEffect(() => {
     (async () => {
       const {status} = await Location.requestForegroundPermissionsAsync();
@@ -57,6 +59,12 @@ export default function MapScreen() {
     }); 
   }
 
+  const toggleMapType = () => {
+    if (mapType === 'standard') setMapType('satellite');
+    else if (mapType === 'satellite') setMapType('hybrid');
+    else if (mapType === 'hybrid') setMapType('terrain');
+    else setMapType('standard');
+  }
 
   return (
     <View style={mapStyles.container}>
@@ -69,6 +77,7 @@ export default function MapScreen() {
           ref={mapRef}
           minDelta={0.001}
           maxDelta={0.01}
+          mapType={mapType}
           style={mapStyles.mapContainer}
           initialRegion={{
             latitude: 14.5767,
@@ -177,11 +186,12 @@ export default function MapScreen() {
         
 
         <View style={mapStyles.bottomSheet}>
-          <TouchableOpacity style={mapStyles.toggleButton}>
+          <TouchableOpacity style={mapStyles.toggleButton} onPress={toggleMapType}>
             <Layers size={20} color="#1F2937" />
             <Text style={mapStyles.toggleText}>Toggle Map Layers</Text>
           </TouchableOpacity>
-
+          
+          {/*POSSIBLE BACKEND*/}
           <View style={mapStyles.routeCard}>
             <View style={mapStyles.routeHeader}>
               <MapPin size={16} color="#3B82F6" />

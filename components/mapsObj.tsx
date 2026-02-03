@@ -101,10 +101,4 @@ export const pasigGovBuildings = [
         coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
     },
 
-    {
-        title: 'Kalawaan Barangay',
-        description: 'Barangay Hall',
-        coordinate: { latitude: 14.5515932, longitude: 121.0866419 }
-    },
-
 ]
