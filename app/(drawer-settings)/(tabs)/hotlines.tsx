@@ -1,27 +1,29 @@
-import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { Phone, Copy } from 'lucide-react-native';
 import { hotlinesStyles } from '@/app/appStyles/hotlines.style';
 import { hotlines } from '@/app/components/objects/hotlinesObjs';
 import { useNavigation } from 'expo-router';
-
-const getCategoryColor = (category: string) => {
-  switch (category) {
-    case 'Police':
-      return '#DBEAFE';
-    case 'Disaster':
-      return '#FEE2E2';
-    case 'Fire':
-      return '#FFEDD5';
-    case 'Medical':
-      return '#FECACA';
-    default:
-      return '#F3F4F6';
-  }
-};
+import { getCategoryColor } from '@/app/functionalities/hotlines/hotlinesColor.img';
+import * as Clipboard from 'expo-clipboard';
+import call from 'react-native-phone-call';
 
 export default function HotlinesScreen() {
   const navigation = useNavigation<any>();
+
+  const handleCall = (number: string) => {
+    const args = {
+      number: number,
+      prompt: false,  
+    };
+    call(args).catch(() => Alert.alert('Error', 'Unable to place a call'));
+  };
+
+  const handleCopy = (number: string) => {
+    Clipboard.setStringAsync(number);
+    Alert.alert("Copied", `Hotline number ${number} copied to clipboard`);
+  };
+
   return (
     <View style={hotlinesStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()}/>
@@ -57,10 +59,16 @@ export default function HotlinesScreen() {
 
             <View style={hotlinesStyles.actionButtons}>
               <TouchableOpacity
-                style={[hotlinesStyles.callButton, { backgroundColor: hotline.color }]}>
+                style={[hotlinesStyles.callButton, { backgroundColor: hotline.color }]}
+                onPress={() => handleCall(hotline.number)}    
+              >
                 <Phone size={20} color="#FFFFFF" />
               </TouchableOpacity>
-              <TouchableOpacity style={hotlinesStyles.copyButton}>
+
+              <TouchableOpacity 
+                style={hotlinesStyles.copyButton}
+                onPress={() => handleCopy(hotline.name)}
+              >
                 <Copy size={20} color="#6B7280" />
               </TouchableOpacity>
             </View>

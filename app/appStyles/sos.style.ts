@@ -17,7 +17,7 @@ export const SosStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 12,
-    alignSelf: 'flex-start',
+    textAlign: 'center'
   },
   description: {
     fontSize: 14,

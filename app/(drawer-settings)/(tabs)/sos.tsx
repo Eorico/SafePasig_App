@@ -1,11 +1,44 @@
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { AlertCircle, Mic, Phone } from 'lucide-react-native';
 import { SosStyles } from '@/app/appStyles/sos.style';
 import { useNavigation } from 'expo-router';
+import * as Location from 'expo-location';
+import call from 'react-native-phone-call';
+import { useState } from 'react';
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
+
+  const [loc, setLoc] = useState<{ latitude: number; longitude: number} | null>(null);
+  const [listening, setListening] = useState(false);
+
+   const getUserLoc = async () => {
+    const {status} = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Permission Denied", "Location permission is required");
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    setLoc({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+  };
+
+  const triggerSOS = async () => {
+    Vibration.vibrate([500, 500, 500]);
+    await getUserLoc();
+    Alert.alert(
+      'SOS Triggered',
+      `Your SOS has been sent!\nLocation: ${loc?.latitude ?? 'Fetching...'}, ${loc?.longitude ?? 'Fetching...'}`,
+    );
+  }
+
+  const quickCall911 = () => {
+    const args = { number: '911', prompt: true }
+    call(args).catch(() => Alert.alert("Error", "Unable to call 911"));
+  }
+
+
   return (
     <View style={SosStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()}/>
@@ -17,7 +50,7 @@ export default function SOSScreen() {
         </Text>
 
         <View style={SosStyles.sosSection}>
-          <TouchableOpacity style={SosStyles.sosButton}>
+          <TouchableOpacity style={SosStyles.sosButton} onPress={triggerSOS}>
             <View style={SosStyles.sosButtonInner}>
               <AlertCircle size={64} color="#FFFFFF" strokeWidth={3} />
               <Text style={SosStyles.sosButtonText}>SOS</Text>
@@ -26,12 +59,15 @@ export default function SOSScreen() {
         </View>
 
         <View style={SosStyles.actionButtons}>
-          <TouchableOpacity style={SosStyles.voiceButton}>
+          <TouchableOpacity 
+            style={SosStyles.voiceButton}
+             
+          >
             <Mic size={20} color="#FFFFFF" />
             <Text style={SosStyles.voiceButtonText}>Voice SOS</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={SosStyles.callButton}>
+          <TouchableOpacity style={SosStyles.callButton} onPress={quickCall911}>
             <Phone size={20} color="#FFFFFF" />
             <Text style={SosStyles.callButtonText}>Quick Call 911</Text>
           </TouchableOpacity>

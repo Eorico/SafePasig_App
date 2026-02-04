@@ -5,7 +5,7 @@ import { alertStyles } from '@/app/appStyles/alerts.style';
 import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
-import { getAlertColor, ALERT_COLORS } from '@/app/components/ui/alertsColor.img';
+import { getAlertColor, ALERT_COLORS } from '@/app/functionalities/alerts/alertsColor.img';
 
 export default function AlertsScreen() {
   const navigation = useNavigation<any>();
