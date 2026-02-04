@@ -1,11 +1,11 @@
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator } from 'react-native';
-import Header from '@/components/header';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
+import Header from '@/components/ui/header';
 import { X, CloudRain, Sun } from 'lucide-react-native';
-import { alerts } from '@/components/alertsObjs';
 import { alertStyles } from '@/appStyles/alerts.style';
 import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
+import { getAlertColor, ALERT_COLORS } from '@/components/ui/alertsColor.img';
 
 export default function AlertsScreen() {
   const navigation = useNavigation<any>();
@@ -76,36 +76,68 @@ export default function AlertsScreen() {
       <ScrollView style={alertStyles.scrollView} contentContainerStyle={alertStyles.content}>
         <Text style={alertStyles.pageTitle}>Active Alerts</Text>
 
+
         {/* Weather */}
         {loadingWeather ? (
-          <ActivityIndicator size="large" color="#3B82F6" />
+          <ActivityIndicator size="large" color="#babdc2" />
         ) : weather ? (
-          <View
-            style={[
-              alertStyles.alertCard,
-              { backgroundColor: '#2563EB', borderLeftColor: '#2563EB' },
-            ]}
-          >
-            <View style={alertStyles.alertHeader}>
-              <Text style={[alertStyles.alertTitle, { color: '#fff' }]}> 
-                <Sun size={30} color={'white'}/>   Pasig Weather Update
-              </Text>
-              <TouchableOpacity style={alertStyles.closeButton}>
-                <X size={20} color="#FFFFFF" />
-              </TouchableOpacity>
-            </View>
-            <Text style={alertStyles.alertDescription}>
-              {weather.weather[0].description} | Temp: {weather.main.temp}°C | Humidity:{' '}
-              {weather.main.humidity}%
-            </Text>
-          </View>
+          (() => {
+            const color = getAlertColor(weather);
+
+            // BLUE = photo background
+            if (color === ALERT_COLORS.info) {
+              return (
+                <ImageBackground
+                  source={require('@/assets/images/default.jpg')}
+                  imageStyle={{ borderRadius: 12 }}
+                  style={[alertStyles.alertCard, { borderLeftColor: color }]}
+                >
+                  <View style={alertStyles.overlay}>
+                    <View style={alertStyles.alertHeader}>
+                      
+                      <Text style={alertStyles.alertTitle}>
+                        <Sun size={30} color="white" /> Pasig Weather Update
+                      </Text>
+                      
+                    </View>
+
+                    <Text style={alertStyles.alertDescription}>
+                      {weather.weather[0].description} | Temp: {weather.main.temp}°C | Humidity:{' '}
+                      {weather.main.humidity}%
+                    </Text>
+                  </View>
+                </ImageBackground>
+              );
+            }
+
+            return (
+              <View
+                style={[
+                  alertStyles.alertCard,
+                  { backgroundColor: color, borderLeftColor: color },
+                ]}
+              >
+                <View style={alertStyles.alertHeader}>
+                  <Text style={alertStyles.alertTitle}>
+                    <Sun size={30} color="white" /> Pasig Weather Update
+                  </Text>
+                </View>
+
+                <Text style={alertStyles.alertDescription}>
+                  {weather.weather[0].description} | Temp: {weather.main.temp}°C | Humidity:{' '}
+                  {weather.main.humidity}%
+                </Text>
+              </View>
+            );
+          })()
         ) : (
           <Text style={{ color: 'red', marginVertical: 10 }}>Unable to fetch weather</Text>
         )}
 
+
         {/* Typhoon Alerts */}
         {loadingTyphoon ? (
-          <ActivityIndicator size="large" color="#DC2626" />
+          <ActivityIndicator size="large" color="#babdc2" />
         ) : (
           <>
             {typhoons.filter((typhoon) => {
@@ -120,11 +152,17 @@ export default function AlertsScreen() {
                 .map((typhoon, idx) => (
                   <View
                     key={idx}
-                    style={[alertStyles.alertCard, { backgroundColor: '#DC2626', borderLeftColor: '#DC2626' }]}
+                    style={[alertStyles.alertCard, 
+                      { 
+                        backgroundColor: getAlertColor(typhoon), 
+                        borderLeftColor: '#DC2626'
+                      }
+                    ]}
                   >
                     <View style={alertStyles.alertHeader}>
                       <Text style={[alertStyles.alertTitle, { color: '#fff' }]}>
-                        TYPHOON ALERT!
+                        TYPHOON ALERT!: 
+                        {" "}
                         {typhoon.title}
                       </Text>
                       <TouchableOpacity style={alertStyles.closeButton}>
@@ -149,44 +187,7 @@ export default function AlertsScreen() {
             )}
           </>
         )}
-
-        {/* Other Alerts */}
-        {alerts.map((alert) => {
-          const Icon = alert.icon;
-          return (
-            <View
-              key={alert.id}
-              style={[alertStyles.alertCard, { backgroundColor: alert.color, borderLeftColor: alert.color }]}
-            >
-              <View style={alertStyles.alertHeader}>
-                <View style={alertStyles.alertTitleRow}>
-                  <Icon size={24} color="#FFFFFF" />
-                  <Text style={alertStyles.alertTitle}>{alert.title}</Text>
-                </View>
-                <TouchableOpacity style={alertStyles.closeButton}>
-                  <X size={20} color="#FFFFFF" />
-                </TouchableOpacity>
-              </View>
-
-              {alert.category && (
-                <View style={alertStyles.categoryBadge}>
-                  <Text style={alertStyles.categoryText}>{alert.category}</Text>
-                </View>
-              )}
-
-              <Text style={alertStyles.alertDescription}>{alert.description}</Text>
-
-              {alert.location && (
-                <View style={alertStyles.alertFooter}>
-                  <View style={alertStyles.locationBadge}>
-                    <Text style={alertStyles.locationText}>📍 {alert.location}</Text>
-                  </View>
-                  <Text style={alertStyles.timeText}>{alert.time}</Text>
-                </View>
-              )}
-            </View>
-          );
-        })}
+         
       </ScrollView>
     </View>
   );

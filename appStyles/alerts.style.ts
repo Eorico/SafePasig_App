@@ -89,4 +89,9 @@ export const alertStyles = StyleSheet.create({
     color: '#FFFFFF',
     opacity: 0.9,
   },
+  overlay: {
+  backgroundColor: 'rgba(0,0,0,0.25)',
+  borderRadius: 12,
+  padding: 16,
+ }
 });
