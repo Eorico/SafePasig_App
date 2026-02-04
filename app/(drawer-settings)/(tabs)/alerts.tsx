@@ -1,11 +1,11 @@
 import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackground } from 'react-native';
-import Header from '@/components/ui/header';
+import Header from '@/app/components/ui/header';
 import { X, CloudRain, Sun } from 'lucide-react-native';
-import { alertStyles } from '@/appStyles/alerts.style';
+import { alertStyles } from '@/app/appStyles/alerts.style';
 import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
-import { getAlertColor, ALERT_COLORS } from '@/components/ui/alertsColor.img';
+import { getAlertColor, ALERT_COLORS } from '@/app/components/ui/alertsColor.img';
 
 export default function AlertsScreen() {
   const navigation = useNavigation<any>();

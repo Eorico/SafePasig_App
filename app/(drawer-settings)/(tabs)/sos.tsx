@@ -1,7 +1,7 @@
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
-import Header from '@/components/ui/header';
+import Header from '@/app/components/ui/header';
 import { AlertCircle, Mic, Phone } from 'lucide-react-native';
-import { SosStyles } from '@/appStyles/sos.style';
+import { SosStyles } from '@/app/appStyles/sos.style';
 import { useNavigation } from 'expo-router';
 
 export default function SOSScreen() {

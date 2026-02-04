@@ -1,8 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import Header from '@/components/ui/header';
+import Header from '@/app/components/ui/header';
 import { Phone, Copy } from 'lucide-react-native';
-import { hotlinesStyles } from '@/appStyles/hotlines.style';
-import { hotlines } from '@/components/objects/hotlinesObjs';
+import { hotlinesStyles } from '@/app/appStyles/hotlines.style';
+import { hotlines } from '@/app/components/objects/hotlinesObjs';
 import { useNavigation } from 'expo-router';
 
 const getCategoryColor = (category: string) => {

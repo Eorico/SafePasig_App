@@ -1,7 +1,7 @@
 import { Drawer } from 'expo-router/drawer';
 import { View, Text, Switch, TouchableOpacity, ScrollView, Vibration } from 'react-native';
 import { useState } from 'react';
-import { drawerStyles } from '@/appStyles/drawer.style';
+import { drawerStyles } from '@/app/appStyles/drawer.style';
 import { Settings } from 'lucide-react-native';
 
 export default function DrawerLayout() {

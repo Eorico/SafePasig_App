@@ -1,7 +1,7 @@
 import { Tabs } from 'expo-router';
 import { Map, AlertCircle, Phone, FileText } from 'lucide-react-native';
-import { _layoutStyles } from '@/appStyles/_layout.style';
-import { SosTabButton } from '@/components/ui/sos.button';
+import { _layoutStyles } from '@/app/appStyles/_layout.style';
+import { SosTabButton } from '@/app/components/ui/sos.button';
 
 export default function TabLayout() {
   return (

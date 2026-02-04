@@ -1,10 +1,10 @@
 import { View, Text, TouchableOpacity } from 'react-native';
-import Header from '@/components/ui/header';
+import Header from '@/app/components/ui/header';
 import { MapPin, Layers, Building, Plus, Minus } from 'lucide-react-native';
-import { mapStyles } from '@/appStyles/map.style';
+import { mapStyles } from '@/app/appStyles/map.style';
 import { useNavigation } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
-import { pasigGovBuildings } from '@/components/objects/mapsObj';
+import { pasigGovBuildings } from '@/app/components/objects/mapsObj';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 

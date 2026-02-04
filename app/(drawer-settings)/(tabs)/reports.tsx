@@ -1,8 +1,8 @@
 import { View, Text, ScrollView, TouchableOpacity } from 'react-native';
-import Header from '@/components/ui/header';
+import Header from '@/app/components/ui/header';
 import { Upload, Image, Video, AlertTriangle } from 'lucide-react-native';
-import { reportsStyles } from '@/appStyles/reports.style';
-import { reports } from '@/components/objects/reportsObj';
+import { reportsStyles } from '@/app/appStyles/reports.style';
+import { reports } from '@/app/components/objects/reportsObj';
 import { useNavigation } from 'expo-router';
 
 export default function ReportsScreen() {

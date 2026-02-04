@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useFrameworkReady } from '@/hooks/use.FrameWork.Ready';
+import { useFrameworkReady } from '@/app/hooks/use.FrameWork.Ready';
 
 export default function RootLayout() {
   useFrameworkReady();

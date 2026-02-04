@@ -2,7 +2,7 @@ import { Animated, TouchableOpacity, View, Text } from 'react-native';
 import { useRef, useEffect, useState } from 'react';
 import { AlertCircle } from 'lucide-react-native';
 import { useRouter, useSegments } from 'expo-router';
-import { _layoutStyles } from '@/appStyles/_layout.style';
+import { _layoutStyles } from '@/app/appStyles/_layout.style';
 
 export function SosTabButton(props: any) {
   const scale = useRef(new Animated.Value(1)).current;

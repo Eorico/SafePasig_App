@@ -1,7 +1,7 @@
 import { View, Text, TouchableOpacity } from 'react-native';
 import { Shield, Settings2 } from 'lucide-react-native';
-import { HeaderProps } from '@/entities/header.props';
-import { headerStyles } from '@/appStyles/header.style';
+import { HeaderProps } from '@/app/entities/header.props';
+import { headerStyles } from '@/app/appStyles/header.style';
 
 export default function Header({ onMenuPress }: HeaderProps) {
   return (
