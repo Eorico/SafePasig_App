@@ -6,12 +6,14 @@ import { useNavigation } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
 import { pasigGovBuildings } from '@/app/components/objects/mapsObj';
 import * as Location from 'expo-location';
-import { useEffect, useRef, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
   const [userLoc, setUserLoc] = useState<any>(null);
   const mapRef = useRef<MapView>(null);
+
+  const [reportData, setReportData] = useState<any>(null);
 
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
 
@@ -42,6 +44,12 @@ export default function MapScreen() {
 
     })();
   },[]);
+
+  useEffect(() => {
+    fetch('https://safepasig-backend.onrender.com/reports')
+    .then(res => res.json())
+    .then(data => setReportData(data.reports));
+  }, []);
 
   const zoomIn = async () => {
     const camera = await mapRef.current?.getCamera();
@@ -86,6 +94,15 @@ export default function MapScreen() {
             longitudeDelta: 0.002
           }}
         > 
+
+          {reportData && reportData.map((report: any) => (
+            <Marker
+              key={report._id}
+              coordinate={{ latitude: report.lat, longitude: report.lng }}
+              title={report.type}
+              description={report.description}
+            />
+          ))}
 
           {userLoc && (
             <Marker
