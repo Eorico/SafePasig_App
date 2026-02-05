@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { AlertCircle, Mic, Phone } from 'lucide-react-native';
+import { AlertCircle, Phone } from 'lucide-react-native';
 import { SosStyles } from '@/app/appStyles/sos.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
@@ -9,9 +9,7 @@ import { useState } from 'react';
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
-
-  const [loc, setLoc] = useState<{ latitude: number; longitude: number} | null>(null);
-  const [listening, setListening] = useState(false);
+  const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
 
    const getUserLoc = async () => {
     const {status} = await Location.requestForegroundPermissionsAsync();
@@ -59,14 +57,7 @@ export default function SOSScreen() {
         </View>
 
         <View style={SosStyles.actionButtons}>
-          <TouchableOpacity 
-            style={SosStyles.voiceButton}
-             
-          >
-            <Mic size={20} color="#FFFFFF" />
-            <Text style={SosStyles.voiceButtonText}>Voice SOS</Text>
-          </TouchableOpacity>
-
+          
           <TouchableOpacity style={SosStyles.callButton} onPress={quickCall911}>
             <Phone size={20} color="#FFFFFF" />
             <Text style={SosStyles.callButtonText}>Quick Call 911</Text>
