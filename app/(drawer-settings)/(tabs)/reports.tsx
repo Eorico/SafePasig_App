@@ -114,7 +114,7 @@ export default function ReportsScreen() {
       sortedReports.forEach((report: any, index: number) => {
         setTimeout(() => {
           setReportsData(prev => [...prev, report]);
-        }, index * 300);  
+        }, index * 50);  
       });
 
     } catch (err) {

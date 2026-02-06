@@ -6,6 +6,7 @@ import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
 import { getAlertColor, ALERT_COLORS } from '@/app/functionalities/alerts/alertsColor.img';
+import { SwipeableProps } from 'react-native-gesture-handler';
 
 export default function AlertsScreen() {
   const navigation = useNavigation<any>();
@@ -13,6 +14,8 @@ export default function AlertsScreen() {
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingTyphoon, setLoadingTyphoon] = useState(true);
   const [typhoons, setTyphoons] = useState<any[]>([]);
+  const [disasterReports, setDisasterReports] = useState<any[]>([]);
+  const [loadingReports, setLoadingReports] = useState(true);
 
   const WEATHER_API = '882a157d4e3d239fcaec8957c54ae8b3';
   const LAT = 14.5767;
@@ -69,6 +72,44 @@ export default function AlertsScreen() {
     };
     fetchTyphoons();
   }, []);
+
+  useEffect(() => {
+    const fetReports = async () => {
+      try {
+        const res = await fetch('https://safepasig-backend.onrender.com/reports');
+        const data = await res.json();
+        const reports = data.map((r:any) => ({
+          ...r,
+          latitude: parseFloat(r.latitude),
+          longitude: parseFloat(r.longitude),
+        }));
+
+        const uniqueReports = Array.from(
+          new Map(reports.map((r:any) => [r._id, r])).values()
+        );
+
+        setDisasterReports(uniqueReports);
+      } catch (error) {
+        console.error("Failed to fetch disaster reports: ", error);
+        
+      } finally {
+        setLoadingReports(false);
+      }
+    };
+
+    fetReports();
+
+    const interval = setInterval(fetReports, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const dismissTyphoonAlert = (index: number) => {
+    setTyphoons(prev => prev.filter((_, i) => i !== index));
+  }
+
+  const dismissReportAlert = (id: string) => {
+    setDisasterReports(prev => prev.filter(report => report._id !== id));
+  }
 
   return (
     <View style={alertStyles.container}>
@@ -166,7 +207,7 @@ export default function AlertsScreen() {
                         {typhoon.title}
                       </Text>
                       <TouchableOpacity style={alertStyles.closeButton}>
-                        <X size={20} color="#FFFFFF" />
+                        <X size={20} color="#FFFFFF" onPress={() => dismissTyphoonAlert(idx)}/>
                       </TouchableOpacity>
                     </View>
                     <Text style={alertStyles.alertDescription}>{typhoon.description}</Text>
@@ -186,6 +227,27 @@ export default function AlertsScreen() {
               </View>
             )}
           </>
+        )}
+
+        {/* Disaster Reports Alerts */}
+        {loadingReports ? (
+          <ActivityIndicator size="large" color="#babdc2" />
+        ) : (
+          disasterReports.length > 0 &&
+          disasterReports.map((report) => (
+            <View key={report._id} style={[alertStyles.alertCard, { backgroundColor: '#DC2626', borderLeftColor: '#DC2626' }]}>
+              <View style={alertStyles.alertHeader}>
+                <Text style={[alertStyles.alertTitle, { color: '#fff' }]}>
+                  NEW DISASTER REPORT: {report.type}
+                </Text>
+                <TouchableOpacity style={alertStyles.closeButton}>
+                  <X size={20} color="#FFFFFF" onPress={() => dismissReportAlert(report._id)}/>
+                </TouchableOpacity>
+              </View>
+              <Text style={alertStyles.alertDescription}>{report.description}</Text>
+              <Text style={[alertStyles.timeText, { marginTop: 8 }]}>{new Date(report.createdAt).toLocaleString()}</Text>
+            </View>
+          ))
         )}
          
       </ScrollView>

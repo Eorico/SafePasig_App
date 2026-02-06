@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Animated } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { MapPin, Layers, Building, Plus, Minus } from 'lucide-react-native';
+import { MapPin, Layers, Building, Plus, Minus, X } from 'lucide-react-native';
 import { mapStyles } from '@/app/appStyles/map.style';
 import { useNavigation, useLocalSearchParams } from 'expo-router';
 import MapView, { Marker } from 'react-native-maps';
@@ -17,6 +17,8 @@ export default function MapScreen() {
   const [reportData, setReportData] = useState<any[]>([]);
   const [loadingMarkers, setLoadingMarkers] = useState<string[]>([]); // marker IDs still loading
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
+
+  const [newAlertReport, setNewAlertReport] = useState<any | null>(null);
 
   const params = useLocalSearchParams();
   const newReport = params.newReport ? JSON.parse(params.newReport as string) : null;
@@ -127,6 +129,31 @@ export default function MapScreen() {
     })();
   }, []);
 
+
+  // Example with polling every 10 seconds
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      const res = await fetch('https://safepasig-backend.onrender.com/reports');
+      const data = await res.json();
+      
+      // Find the newest report that is not in the map
+      const latest = data[data.length - 1];
+      if (latest && !reportData.find(r => r._id === latest._id)) {
+        setNewAlertReport(latest);
+
+        // Optionally, add it to the map
+        setReportData(prev => [...prev, {
+          ...latest,
+          latitude: parseFloat(latest.latitude),
+          longitude: parseFloat(latest.longitude),
+        }]);
+      }
+    }, 10000);
+
+    return () => clearInterval(interval);
+  }, [reportData]);
+
+
   const zoomIn = async () => {
     const camera = await mapRef.current?.getCamera();
     mapRef.current?.animateCamera({ ...camera, zoom: (camera?.zoom || 0) + 1 });
@@ -149,6 +176,34 @@ export default function MapScreen() {
   return (
     <View style={mapStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()} />
+
+        {newAlertReport && (
+          <View style={{
+            position: 'absolute',
+            top: 80,
+            left: 20,
+            right: 20,
+            backgroundColor: '#DC2626',
+            padding: 12,
+            borderRadius: 10,
+            elevation: 10,
+            zIndex: 20
+          }}>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>
+              New Disaster Report!
+            </Text>
+            <Text style={{ color: '#fff', marginTop: 4 }}>
+              {newAlertReport.type}: {newAlertReport.description}
+            </Text>
+            <TouchableOpacity
+              style={{ position: 'absolute', top: 8, right: 8 }}
+              onPress={() => setNewAlertReport(null)}
+            >
+              <X size={20} color="#fff" />
+            </TouchableOpacity>
+          </View>
+        )}
+
 
       <View style={mapStyles.mapWrapper}>
         <MapView
