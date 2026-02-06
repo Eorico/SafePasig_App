@@ -1,12 +1,12 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { Upload, Video, AlertTriangle } from 'lucide-react-native';
+import { Upload, Video, Trash2 } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-import MapView, { Marker } from 'react-native-maps';
-import { useState, useEffect } from 'react';
+ 
+import { useState, useEffect, useRef } from 'react';
 import { Picker } from '@react-native-picker/picker';
 
 export default function ReportsScreen() {
@@ -16,13 +16,7 @@ export default function ReportsScreen() {
   const [reportsData, setReportsData] = useState<any[]>([]);
   const [selectedBrgy, setSelectedBrgy] = useState<string | null>(null);
   const [street, setStreet] = useState<string>('');
-  const [mapRegion, setMapRegion] = useState({
-    latitude: 14.5767,
-    longitude: 121.0851,
-    latitudeDelta: 0.05,
-    longitudeDelta: 0.05,
-  });
-
+ 
   // List of barangays in Pasig
   const barangays = [
     'Bagong Ilog', 'Bagong Katipunan', 'Bambang', 'Kapitolyo', 'Karangalan', 
@@ -31,7 +25,6 @@ export default function ReportsScreen() {
     'Santa Lucia', 'Santa Rosa', 'Santolan', 'Sumilang', 'Ugong', 'Bagong Bayan'
   ];
 
-  // Pick image/video
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -40,7 +33,6 @@ export default function ReportsScreen() {
     if (!result.canceled) setImageUri(result.assets[0].uri);
   };
 
-  // Submit report
   const submitReport = async () => {
     if (!selectedBrgy || !street) {
       Alert.alert('Error', 'Please select a barangay and enter street/village');
@@ -48,21 +40,25 @@ export default function ReportsScreen() {
     }
 
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert('Permission denied', 'Location permission is required.');
+      // Geocode the address to get latitude & longitude
+      const fullAddress = `${street}, ${selectedBrgy}, Pasig, Philippines`;
+      const geocoded = await Location.geocodeAsync(fullAddress);
+
+      if (geocoded.length === 0) {
+        Alert.alert('Error', 'Cannot find location for this address');
         return;
       }
 
-      const loc = await Location.getCurrentPositionAsync({});
-      const form = new FormData();
+      const { latitude, longitude } = geocoded[0];
 
+      // Prepare form data
+      const form = new FormData();
       form.append("type", "Fire");
       form.append("description", `${street}, ${selectedBrgy}`);
       form.append("barangay", selectedBrgy);
       form.append("street", street);
-      form.append("latitude", String(loc.coords.latitude)); // send as number
-      form.append("longitude", String(loc.coords.longitude));
+      form.append("latitude", String(latitude));
+      form.append("longitude", String(longitude));
 
       if (imageUri) {
         const fileName = imageUri.split('/').pop();
@@ -70,6 +66,7 @@ export default function ReportsScreen() {
         form.append("media", { uri: imageUri, name: fileName, type: fileType } as any);
       }
 
+      // Send to backend
       const res = await fetch('https://safepasig-backend.onrender.com/reports', {
         method: 'POST',
         body: form,
@@ -85,8 +82,8 @@ export default function ReportsScreen() {
 
         const newReport = {
           _id: data.report._id,
-          latitude: data.report.latitude,
-          longitude: data.report.longitude,
+          latitude: latitude,
+          longitude: longitude,
           type: data.report.type,
           description: `${data.report.street}, ${data.report.barangay}`,
           mediaUrl: data.report.mediaUrl,
@@ -94,15 +91,11 @@ export default function ReportsScreen() {
           createdAt: data.report.createdAt,
         };
 
-        // Add to reports list
         setReportsData(prev => [...prev, newReport]);
 
-        // Center map on new report
-        setMapRegion({
-          latitude: newReport.latitude,
-          longitude: newReport.longitude,
-          latitudeDelta: 0.05,
-          longitudeDelta: 0.05,
+        // Navigate to map and pass the new report
+        navigation.navigate('map', {
+          newReport: JSON.stringify(newReport),
         });
       } else {
         Alert.alert('Error', 'Failed to submit report');
@@ -113,7 +106,6 @@ export default function ReportsScreen() {
     }
   };
 
-  // Fetch reports
   const fetchReports = async () => {
     try {
       const res = await fetch('https://safepasig-backend.onrender.com/reports');
@@ -127,6 +119,59 @@ export default function ReportsScreen() {
   useEffect(() => {
     fetchReports();
   }, []);
+
+  // 1️⃣ Delete function with confirmation
+const confirmDeleteReport = (reportId: string) => {
+  Alert.alert(
+    'Confirm Delete',
+    'Are you sure you want to delete this report?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      { 
+        text: 'Delete', 
+        style: 'destructive', 
+        onPress: () => deleteReport(reportId) 
+      }
+    ]
+  );
+};
+
+const deleteReport = async (reportId: string) => {
+  try {
+    const res = await fetch(`https://safepasig-backend.onrender.com/reports/${reportId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        // 'Authorization': `Bearer ${token}` // uncomment if backend requires auth
+      }
+    });
+
+    if (!res.ok) {
+      const text = await res.text();
+      console.error('Server response:', text);
+      Alert.alert('Error', 'Failed to delete report.');
+      return;
+    }
+
+    const data = await res.json();
+
+    if (data.success) {
+      // Remove from local state
+      setReportsData(prev => prev.filter(r => r._id !== reportId));
+
+      // Optional: notify map screen to remove marker
+      navigation.navigate('map', { deletedReportId: reportId });
+
+      Alert.alert('Deleted', 'Report successfully deleted.');
+    } else {
+      Alert.alert('Error', 'Failed to delete report.');
+    }
+  } catch (err) {
+    console.error(err);
+    Alert.alert('Error', 'Failed to delete report.');
+  }
+};
+
 
   return (
     <View style={reportsStyles.container}>
@@ -186,57 +231,44 @@ export default function ReportsScreen() {
           </View>
         </View>
 
-        {/* Anti-troll */}
-        <View style={reportsStyles.protectionCard}>
-          <View style={reportsStyles.protectionHeader}>
-            <AlertTriangle size={16} color="#92400E" />
-            <Text style={reportsStyles.protectionTitle}>Anti-Troll Protection</Text>
-          </View>
-          <Text style={reportsStyles.protectionText}>
-            All submissions require photo/video and are scanned using AI to detect fake or misleading content. False reports will be flagged.
-          </Text>
-        </View>
-
-        {/* Map */}
-        <Text style={reportsStyles.sectionTitle}>Recent Reports on Map</Text>
-        <MapView
-          style={{ width: '100%', height: 300, marginBottom: 20 }}
-          region={mapRegion}
-        >
-          {reportsData.map(report => (
-            <Marker
-              key={report._id}
-              coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-              title={report.type}
-              description={`${report.type} – ${report.description}`}
-            />
-          ))}
-        </MapView>
-
-        {/* Recent Reports List */}
+         
         <Text style={reportsStyles.sectionTitle}>Recent Reports</Text>
-        {reportsData.map(report => (
+         {reportsData.map(report => (
           <View key={report._id} style={reportsStyles.reportCard}>
             <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
               <View style={reportsStyles.iconCircle}>
                 {report.mediaUrl?.endsWith('.mp4') ? (
                   <Video size={28} color="#B91C1C" />
                 ) : (
-                  <Image source={{ uri: report.mediaUrl }} style={{ width: 50, height: 50, borderRadius: 8 }} />
+                  <Image
+                    source={{ uri: report.mediaUrl }}
+                    style={{ width: 50, height: 50, borderRadius: 8 }}
+                  />
                 )}
               </View>
+
               <View style={reportsStyles.statusBadge}>
                 <Text style={reportsStyles.statusIcon}>
                   {report.status === 'Verified' ? '✓' : '⏱'}
                 </Text>
               </View>
             </View>
+
             <View style={reportsStyles.reportContent}>
               <Text style={reportsStyles.locationText}>{report.description}</Text>
               <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
             </View>
+
+            {/* Trash Icon */}
+            <TouchableOpacity
+              style={{ position: 'absolute', top: 10, right: 10 }}
+              onPress={() => confirmDeleteReport(report._id)}
+            >
+              <Trash2 size={20} color="#B91C1C" />
+            </TouchableOpacity>
           </View>
         ))}
+
       </ScrollView>
     </View>
   );
