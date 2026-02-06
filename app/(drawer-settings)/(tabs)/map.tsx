@@ -29,30 +29,7 @@ export default function MapScreen() {
   // Animated scale + fade
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-
-  // Inside MapScreen.tsx
-  useEffect(() => {
-    const fetchSOS = async () => {
-      try {
-        const res = await fetch('https://safepasig-backend.onrender.com/sos');
-        const data = await res.json();
-
-        // New SOS alerts not already on map
-        const newSOS = data.filter((s: any) => !sosList.find(existing => existing._id === s._id));
-        if (newSOS.length > 0) {
-          Vibration.vibrate([300, 300, 300, 300]);
-        }
-
-        setSosList(data);
-      } catch (err) {
-        console.error('Failed to fetch SOS:', err);
-      }
-    };
-
-    fetchSOS();
-    const interval = setInterval(fetchSOS, 5000);
-    return () => clearInterval(interval);
-  }, [sosList]);
+  
 
   // Fetch reports
   useEffect(() => {

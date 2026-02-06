@@ -16,23 +16,12 @@ export default function AlertsScreen() {
   const [disasterReports, setDisasterReports] = useState<any[]>([]);
   const [loadingReports, setLoadingReports] = useState(true);
 
-  const [sosAlerts, setSosAlerts] = useState<any[]>([]);
-
   const WEATHER_API = '882a157d4e3d239fcaec8957c54ae8b3';
   const LAT = 14.5767;
   const LON = 121.0851;
 
-  useEffect(() => {
-  const fetchSOS = async () => {
-    const res = await fetch('https://safepasig-backend.onrender.com/SOS');
-    const data = await res.json();
-    setSosAlerts(data);
-  };
-
-  fetchSOS();
-  const i = setInterval(fetchSOS, 5000);
-  return () => clearInterval(i);
-}, []);
+  
+ 
 
   // Fetch weather
   useEffect(() => {
@@ -188,16 +177,6 @@ export default function AlertsScreen() {
           <Text style={{ color: 'red', marginVertical: 10 }}>Unable to fetch weather</Text>
         )}
 
-        {sosAlerts.map(sos => (
-          <View key={sos._id} style={[alertStyles.alertCard, { backgroundColor: '#DC2626' }]}>
-            <Text style={alertStyles.alertTitle}>
-              🚨 SOS ALERT — Someone needs help!
-            </Text>
-            <Text style={alertStyles.alertDescription}>
-              Location: {sos.latitude.toFixed(4)}, {sos.longitude.toFixed(4)}
-            </Text>
-          </View>
-        ))}
 
         {/* Typhoon Alerts */}
         {loadingTyphoon ? (

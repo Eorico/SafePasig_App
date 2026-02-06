@@ -5,52 +5,38 @@ import { SosStyles } from '@/app/appStyles/sos.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
 import call from 'react-native-phone-call';
-import { useEffect, useState } from 'react';
-import * as Notifications from 'expo-notifications';
+import { useState } from 'react';
 
 export default function SOSScreen() {
- const navigation = useNavigation<any>();
-  const [loc, setLoc] = useState<{ latitude: number; longitude: number } | null>(null);
+  const navigation = useNavigation<any>();
+  const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
 
-  const getUserLoc = async () => {
-    const { status } = await Location.requestForegroundPermissionsAsync();
+   const getUserLoc = async () => {
+    const {status} = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert("Permission Denied", "Location permission is required");
-      return null;
+      return;
     }
 
     const location = await Location.getCurrentPositionAsync({});
     setLoc({ latitude: location.coords.latitude, longitude: location.coords.longitude });
-    return { latitude: location.coords.latitude, longitude: location.coords.longitude };
   };
 
   const triggerSOS = async () => {
     Vibration.vibrate([500, 500, 500]);
-
-    const coords = await getUserLoc();
-    if (!coords) return;
-
-    try {
-      await fetch('https://safepasig-backend.onrender.com/SOS', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(coords),
-      });
-
-      Alert.alert(
-        'SOS Triggered',
-        `Your SOS has been sent!\nLocation: ${coords.latitude}, ${coords.longitude}`
-      );
-    } catch (err) {
-      Alert.alert('Error', 'Failed to send SOS. Try again.');
-      console.error(err);
-    }
-  };
+    await getUserLoc();
+    Alert.alert(
+      'SOS Triggered',
+      `Your SOS has been sent!\nLocation: ${loc?.latitude ?? 'Fetching...'}, ${loc?.longitude ?? 'Fetching...'}`,
+    );
+  }
 
   const quickCall911 = () => {
-    const args = { number: '911', prompt: true };
+    const args = { number: '911', prompt: true }
     call(args).catch(() => Alert.alert("Error", "Unable to call 911"));
-  };
+  }
+
+
   return (
     <View style={SosStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()}/>
