@@ -19,6 +19,7 @@ export default function MapScreen() {
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
 
   const [newAlertReport, setNewAlertReport] = useState<any | null>(null);
+  const [sosList, setSosList] = useState<any[]>([]);
 
   const params = useLocalSearchParams();
   const newReport = params.newReport ? JSON.parse(params.newReport as string) : null;
@@ -28,6 +29,18 @@ export default function MapScreen() {
   // Animated scale + fade
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    const fetchSOS = async () => {
+      const res = await fetch('https://safepasig-backend.onrender.com/SOS');
+      const data = await res.json();
+      setSosList(data);
+    }
+
+    fetchSOS();
+    const i = setInterval(fetchSOS, 5000);
+    return () => clearInterval(i); 
+  });
 
   // Fetch reports
   useEffect(() => {
@@ -203,6 +216,19 @@ export default function MapScreen() {
             </TouchableOpacity>
           </View>
         )}
+
+        {sosList.map(sos => (
+          <Marker
+            key={sos._id}
+            coordinate={{ latitude: sos.latitude, longitude: sos.longitude }}
+          >
+            <Image
+              source={require('@/assets/images/sos-pin.png')}
+              style={{ width: 40, height: 40 }}
+            />
+          </Marker>
+        ))}
+
 
 
       <View style={mapStyles.mapWrapper}>

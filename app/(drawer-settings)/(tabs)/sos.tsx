@@ -11,20 +11,29 @@ export default function SOSScreen() {
   const navigation = useNavigation<any>();
   const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
 
-   const getUserLoc = async () => {
-    const {status} = await Location.requestForegroundPermissionsAsync();
+  const triggerSOS = async () => {
+    Vibration.vibrate([500, 500, 500]);
+    
+    const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
-      Alert.alert("Permission Denied", "Location permission is required");
+      Alert.alert('Permission Denied', 'Location permission is required to send SOS.');
       return;
     }
 
     const location = await Location.getCurrentPositionAsync({});
-    setLoc({ latitude: location.coords.latitude, longitude: location.coords.longitude });
-  };
+    const coords = {
+      latitude: location.coords.latitude,
+      longitude: location.coords.longitude
+    };
+    
+    setLoc(coords);
 
-  const triggerSOS = async () => {
-    Vibration.vibrate([500, 500, 500]);
-    await getUserLoc();
+    await fetch('https://your-backend-api.com/SOS', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(coords)
+    });
+
     Alert.alert(
       'SOS Triggered',
       `Your SOS has been sent!\nLocation: ${loc?.latitude ?? 'Fetching...'}, ${loc?.longitude ?? 'Fetching...'}`,
