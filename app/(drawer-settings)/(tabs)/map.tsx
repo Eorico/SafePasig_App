@@ -30,16 +30,17 @@ export default function MapScreen() {
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
+  // Inside MapScreen.tsx
   useEffect(() => {
     const fetchSOS = async () => {
       try {
-        const res = await fetch('https://safepasig-backend.onrender.com/SOS');
+        const res = await fetch('https://safepasig-backend.onrender.com/sos');
         const data = await res.json();
 
-        const newSOS = data.find((sos: any) => !sosList.some(s => s._id === sos._id));
-        if (newSOS) {
-          Vibration.vibrate([300, 300, 300, 300]); // vibrate on new SOS
-          setNewAlertReport(newSOS);
+        // New SOS alerts not already on map
+        const newSOS = data.filter((s: any) => !sosList.find(existing => existing._id === s._id));
+        if (newSOS.length > 0) {
+          Vibration.vibrate([300, 300, 300, 300]);
         }
 
         setSosList(data);
@@ -52,7 +53,6 @@ export default function MapScreen() {
     const interval = setInterval(fetchSOS, 5000);
     return () => clearInterval(interval);
   }, [sosList]);
-
 
   // Fetch reports
   useEffect(() => {
@@ -233,6 +233,8 @@ export default function MapScreen() {
           <Marker
             key={sos._id}
             coordinate={{ latitude: sos.latitude, longitude: sos.longitude }}
+            title="SOS Alert"
+            description="Someone nearby needs help!"
           >
             <Image
               source={require('@/assets/images/emergency.png')}
@@ -240,8 +242,6 @@ export default function MapScreen() {
             />
           </Marker>
         ))}
-
-
 
       <View style={mapStyles.mapWrapper}>
         <MapView

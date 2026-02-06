@@ -9,72 +9,48 @@ import { useEffect, useState } from 'react';
 import * as Notifications from 'expo-notifications';
 
 export default function SOSScreen() {
-  const navigation = useNavigation<any>();
-  const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
+ const navigation = useNavigation<any>();
+  const [loc, setLoc] = useState<{ latitude: number; longitude: number } | null>(null);
 
-  useEffect(() => {
-    const registerPush = async () => {
-      try {
-        const tokenData = await Notifications.getExpoPushTokenAsync();
-        const token = tokenData.data; // get the actual string token
-        console.log('Push token:', token);
+  const getUserLoc = async () => {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Permission Denied", "Location permission is required");
+      return null;
+    }
 
-        await fetch('https://safepasig-backend.onrender.com/users/registerToken', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ token }),
-        });
-      } catch (err) {
-        console.error('Failed to register push token:', err);
-      }
-    };
-
-    registerPush();
-  }, []);
+    const location = await Location.getCurrentPositionAsync({});
+    setLoc({ latitude: location.coords.latitude, longitude: location.coords.longitude });
+    return { latitude: location.coords.latitude, longitude: location.coords.longitude };
+  };
 
   const triggerSOS = async () => {
+    Vibration.vibrate([500, 500, 500]);
+
+    const coords = await getUserLoc();
+    if (!coords) return;
+
     try {
-      const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== 'granted') {
-        Alert.alert("Permission Denied", "Location permission is required");
-        return;
-      }
-
-      const location = await Location.getCurrentPositionAsync({});
-      const coords = { latitude: location.coords.latitude, longitude: location.coords.longitude };
-      setLoc(coords);
-
-      // Vibrate locally
-      Vibration.vibrate([500, 500, 500]);
-
-      // Send SOS to backend
-      const res = await fetch('https://safepasig-backend.onrender.com/sos', {
+      await fetch('https://safepasig-backend.onrender.com/SOS', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(coords),
       });
 
-      const data = await res.json();
-      if (data.success) {
-        Alert.alert(
-          'SOS Triggered',
-          `Your SOS has been sent!\nLocation: ${coords.latitude}, ${coords.longitude}`,
-        );
-      } else {
-        Alert.alert('Failed', 'Could not send SOS');
-      }
+      Alert.alert(
+        'SOS Triggered',
+        `Your SOS has been sent!\nLocation: ${coords.latitude}, ${coords.longitude}`
+      );
     } catch (err) {
+      Alert.alert('Error', 'Failed to send SOS. Try again.');
       console.error(err);
-      Alert.alert('Error', 'Something went wrong while sending SOS');
     }
   };
 
   const quickCall911 = () => {
-    const args = { number: '911', prompt: true }
+    const args = { number: '911', prompt: true };
     call(args).catch(() => Alert.alert("Error", "Unable to call 911"));
-  }
-
-
+  };
   return (
     <View style={SosStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()}/>
