@@ -7,7 +7,7 @@ import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
 import MapView, { Marker } from 'react-native-maps';
 import { useState, useEffect } from 'react';
-import { Picker } from '@react-native-picker/picker'; 
+import { Picker } from '@react-native-picker/picker';
 
 export default function ReportsScreen() {
   const navigation = useNavigation<any>();
@@ -16,6 +16,12 @@ export default function ReportsScreen() {
   const [reportsData, setReportsData] = useState<any[]>([]);
   const [selectedBrgy, setSelectedBrgy] = useState<string | null>(null);
   const [street, setStreet] = useState<string>('');
+  const [mapRegion, setMapRegion] = useState({
+    latitude: 14.5767,
+    longitude: 121.0851,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  });
 
   // List of barangays in Pasig
   const barangays = [
@@ -31,11 +37,10 @@ export default function ReportsScreen() {
       mediaTypes: ImagePicker.MediaTypeOptions.All,
       allowsEditing: true,
     });
-
     if (!result.canceled) setImageUri(result.assets[0].uri);
   };
 
-  // Submit report to backend
+  // Submit report
   const submitReport = async () => {
     if (!selectedBrgy || !street) {
       Alert.alert('Error', 'Please select a barangay and enter street/village');
@@ -56,7 +61,7 @@ export default function ReportsScreen() {
       form.append("description", `${street}, ${selectedBrgy}`);
       form.append("barangay", selectedBrgy);
       form.append("street", street);
-      form.append("latitude", String(loc.coords.latitude));
+      form.append("latitude", String(loc.coords.latitude)); // send as number
       form.append("longitude", String(loc.coords.longitude));
 
       if (imageUri) {
@@ -65,35 +70,40 @@ export default function ReportsScreen() {
         form.append("media", { uri: imageUri, name: fileName, type: fileType } as any);
       }
 
-      console.log("Submitting report:", { street, selectedBrgy, imageUri });
-
       const res = await fetch('https://safepasig-backend.onrender.com/reports', {
         method: 'POST',
         body: form,
       });
 
-      console.log('Response status:', res.status);
       const data = await res.json();
-      console.log('Response data:', data);
 
       if (data.success) {
         Alert.alert('Success', 'Report submitted successfully!');
         setImageUri(null);
         setSelectedBrgy(null);
         setStreet('');
-        setReportsData(prev => [
-          ...prev,
-          {
-            _id: data.report._id,
-            latitude: data.report.latitude,
-            longitude: data.report.longitude,
-            type: data.report.type,
-            description: `${data.report.street}, ${data.report.barangay}`,
-            mediaUrl: data.report.mediaUrl,
-            status: data.report.status,
-            createdAt: data.report.createdAt,
-          }
-        ]);
+
+        const newReport = {
+          _id: data.report._id,
+          latitude: data.report.latitude,
+          longitude: data.report.longitude,
+          type: data.report.type,
+          description: `${data.report.street}, ${data.report.barangay}`,
+          mediaUrl: data.report.mediaUrl,
+          status: data.report.status,
+          createdAt: data.report.createdAt,
+        };
+
+        // Add to reports list
+        setReportsData(prev => [...prev, newReport]);
+
+        // Center map on new report
+        setMapRegion({
+          latitude: newReport.latitude,
+          longitude: newReport.longitude,
+          latitudeDelta: 0.05,
+          longitudeDelta: 0.05,
+        });
       } else {
         Alert.alert('Error', 'Failed to submit report');
       }
@@ -103,8 +113,7 @@ export default function ReportsScreen() {
     }
   };
 
-
-  // Fetch recent reports from backend
+  // Fetch reports
   const fetchReports = async () => {
     try {
       const res = await fetch('https://safepasig-backend.onrender.com/reports');
@@ -133,22 +142,20 @@ export default function ReportsScreen() {
               Help your community by submitting verified images or videos of disasters
             </Text>
 
-            {/* Barangay Dropdown */}
             <Picker
               selectedValue={selectedBrgy}
               onValueChange={(itemValue: any) => setSelectedBrgy(itemValue)}
               style={{ marginVertical: 10, color: '#fff' }}
             >
               <Picker.Item label="Select Barangay" value={null} />
-              {barangays.map((b) => (
+              {barangays.map(b => (
                 <Picker.Item key={b} label={b} value={b} />
               ))}
             </Picker>
 
-            {/* Street Input */}
             <TextInput
               placeholder="Enter street/village"
-              placeholderTextColor={"gray"}
+              placeholderTextColor="gray"
               value={street}
               onChangeText={setStreet}
               style={{
@@ -161,17 +168,13 @@ export default function ReportsScreen() {
               }}
             />
 
-            {/* Upload Media */}
             <TouchableOpacity style={reportsStyles.submitButton} onPress={pickMedia}>
               <Upload size={20} color="#3B82F6" />
               <Text style={reportsStyles.submitButtonText}>Upload Image/Video</Text>
             </TouchableOpacity>
 
             {imageUri && (
-              <Image
-                source={{ uri: imageUri }}
-                style={{ width: 100, height: 100, marginTop: 10, borderRadius: 8 }}
-              />
+              <Image source={{ uri: imageUri }} style={{ width: 100, height: 100, marginTop: 10, borderRadius: 8 }} />
             )}
 
             <TouchableOpacity
@@ -198,14 +201,9 @@ export default function ReportsScreen() {
         <Text style={reportsStyles.sectionTitle}>Recent Reports on Map</Text>
         <MapView
           style={{ width: '100%', height: 300, marginBottom: 20 }}
-          initialRegion={{
-            latitude: 14.5767,
-            longitude: 121.0851,
-            latitudeDelta: 0.05,
-            longitudeDelta: 0.05,
-          }}
+          region={mapRegion}
         >
-          {reportsData.map((report) => (
+          {reportsData.map(report => (
             <Marker
               key={report._id}
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
@@ -217,17 +215,14 @@ export default function ReportsScreen() {
 
         {/* Recent Reports List */}
         <Text style={reportsStyles.sectionTitle}>Recent Reports</Text>
-        {reportsData.map((report) => (
+        {reportsData.map(report => (
           <View key={report._id} style={reportsStyles.reportCard}>
             <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
               <View style={reportsStyles.iconCircle}>
                 {report.mediaUrl?.endsWith('.mp4') ? (
                   <Video size={28} color="#B91C1C" />
                 ) : (
-                  <Image
-                    source={{ uri: report.mediaUrl }}
-                    style={{ width: 50, height: 50, borderRadius: 8 }}
-                  />
+                  <Image source={{ uri: report.mediaUrl }} style={{ width: 50, height: 50, borderRadius: 8 }} />
                 )}
               </View>
               <View style={reportsStyles.statusBadge}>
@@ -236,7 +231,6 @@ export default function ReportsScreen() {
                 </Text>
               </View>
             </View>
-
             <View style={reportsStyles.reportContent}>
               <Text style={reportsStyles.locationText}>{report.description}</Text>
               <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
