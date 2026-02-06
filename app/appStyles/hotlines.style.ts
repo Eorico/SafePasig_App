@@ -16,6 +16,7 @@ export const hotlinesStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 20,
+    textAlign: 'center'
   },
   hotlineCard: {
     backgroundColor: '#FFFFFF',

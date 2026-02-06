@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity } from 'react-native';
+import { View, Text, TouchableOpacity, Image } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { MapPin, Layers, Building, Plus, Minus } from 'lucide-react-native';
 import { mapStyles } from '@/app/appStyles/map.style';
@@ -7,6 +7,7 @@ import MapView, { Marker } from 'react-native-maps';
 import { pasigGovBuildings } from '@/app/components/objects/mapsObj';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
+import { disasterPinImages } from '@/app/components/objects/disasterPins';
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
@@ -124,7 +125,13 @@ export default function MapScreen() {
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
               title={report.type}
               description={report.description}
-            />
+            >
+              <Image
+                source={disasterPinImages[report.type] || disasterPinImages['Other']}
+                style={{ width: 32, height: 32 }}
+                resizeMode='contain'
+              />
+            </Marker>
           ))}
 
           {/* User location */}

@@ -10,12 +10,15 @@ export const reportsStyles = StyleSheet.create({
   },
   content: {
     padding: 16,
+    paddingHorizontal: 16,
+    paddingBottom:30
   },
   pageTitle: {
     fontSize: 24,
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 20,
+    textAlign: 'center'
   },
   submitCard: {
     backgroundColor: '#0922b1',
@@ -88,6 +91,7 @@ export const reportsStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#1F2937',
     marginBottom: 4,
+    textAlign: 'center'
   },
   reportCard: {
     backgroundColor: '#FFFFFF',
@@ -100,6 +104,8 @@ export const reportsStyles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
     elevation: 2,
+    marginHorizontal: 16,
+    marginBottom: 12
   },
   reportIcon: {
     width: 64,
