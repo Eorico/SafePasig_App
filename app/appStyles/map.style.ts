@@ -103,7 +103,7 @@ export const mapStyles = StyleSheet.create({
   zoomControls: {
     position: 'absolute',
     right: 16,
-    bottom: 250,
+    bottom: 280,
     backgroundColor: '#FFFFFF',
     borderRadius: 8,
     shadowColor: '#000',

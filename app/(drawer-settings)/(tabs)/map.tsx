@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator, Animated } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { MapPin, Layers, Building, Plus, Minus } from 'lucide-react-native';
 import { mapStyles } from '@/app/appStyles/map.style';
@@ -15,40 +15,39 @@ export default function MapScreen() {
 
   const [userLoc, setUserLoc] = useState<{ latitude: number; longitude: number } | null>(null);
   const [reportData, setReportData] = useState<any[]>([]);
+  const [loadingMarkers, setLoadingMarkers] = useState<string[]>([]); // marker IDs still loading
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
 
   const params = useLocalSearchParams();
   const newReport = params.newReport ? JSON.parse(params.newReport as string) : null;
+  const focusReport = params.focusReport ? JSON.parse(params.focusReport as string) : null;
+  const deleteReportId = params.deletedReportId ? (params.deletedReportId as string) : null;
 
-  // Fetch reports once
+  // Animated scale + fade
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+
+  // Fetch reports
   useEffect(() => {
     const fetchReports = async () => {
       try {
         const res = await fetch('https://safepasig-backend.onrender.com/reports');
         const data = await res.json();
 
-        // Convert lat/lng to numbers
         let reports = data.map((r: any) => ({
           ...r,
           latitude: parseFloat(r.latitude),
           longitude: parseFloat(r.longitude),
         }));
 
-        // Add newReport if it doesn't already exist
         if (newReport && !reports.find((r: any) => r._id === newReport._id)) {
           reports.push({
             ...newReport,
             latitude: parseFloat(newReport.latitude),
             longitude: parseFloat(newReport.longitude),
           });
-
-          // Animate to the new report
-          mapRef.current?.animateToRegion({
-            latitude: parseFloat(newReport.latitude),
-            longitude: parseFloat(newReport.longitude),
-            latitudeDelta: 0.001,
-            longitudeDelta: 0.001,
-          }, 1000);
+          // Mark it as loading
+          setLoadingMarkers(prev => [...prev, newReport._id]);
         }
 
         setReportData(reports);
@@ -59,6 +58,53 @@ export default function MapScreen() {
 
     fetchReports();
   }, []);
+
+  // Animate new report marker with fade + scale after a short delay
+  useEffect(() => {
+    if (newReport && loadingMarkers.includes(newReport._id)) {
+      const timer = setTimeout(() => {
+        // Animate map
+        mapRef.current?.animateToRegion({
+          latitude: parseFloat(newReport.latitude),
+          longitude: parseFloat(newReport.longitude),
+          latitudeDelta: 0.001,
+          longitudeDelta: 0.001,
+        }, 1000);
+
+        // Animate marker
+        Animated.parallel([
+          Animated.spring(scaleAnim, { toValue: 1, friction: 5, useNativeDriver: true }),
+          Animated.timing(opacityAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
+        ]).start(() => {
+          // Done loading
+          setLoadingMarkers(prev => prev.filter(id => id !== newReport._id));
+        });
+      }, 300); // small delay to see spinner
+
+      return () => clearTimeout(timer);
+    }
+  }, [loadingMarkers, newReport]);
+
+  // Focus report
+  useEffect(() => {
+    if (focusReport && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: parseFloat(focusReport.latitude),
+        longitude: parseFloat(focusReport.longitude),
+        latitudeDelta: 0.001,
+        longitudeDelta: 0.001,
+      }, 1000);
+    }
+  }, [focusReport]);
+
+  // Delete report
+  useEffect(() => {
+    if (deleteReportId) {
+      setReportData(prev => prev.filter(r => r._id !== deleteReportId));
+      setLoadingMarkers(prev => prev.filter(id => id !== deleteReportId));
+      navigation.setParams({ deletedReportId: null });
+    }
+  }, [deleteReportId]);
 
   // Get user location
   useEffect(() => {
@@ -73,7 +119,6 @@ export default function MapScreen() {
       const coords = { latitude: location.coords.latitude, longitude: location.coords.longitude };
       setUserLoc(coords);
 
-      // Animate to user location
       mapRef.current?.animateToRegion({
         ...coords,
         latitudeDelta: 0.005,
@@ -118,23 +163,47 @@ export default function MapScreen() {
             longitudeDelta: 0.002,
           }}
         >
-          {/* User reports */}
           {reportData.map(report => (
             <Marker
-              key={report._id} // guaranteed unique now
+              key={report._id}
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
               title={report.type}
               description={report.description}
             >
-              <Image
-                source={disasterPinImages[report.type] || disasterPinImages['Other']}
-                style={{ width: 32, height: 32 }}
-                resizeMode='contain'
-              />
+              <View style={{ alignItems: 'center' }}>
+                {loadingMarkers.includes(report._id) ? (
+                  <ActivityIndicator size="small" color="#aa2727" />
+                ) : (
+                  <Animated.View
+                    style={{
+                      width: 32,
+                      height: 32,
+                      borderRadius: 16,
+                      backgroundColor: '#aa2727',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      elevation: 4,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: 0.3,
+                      shadowRadius: 2,
+                      transform: [
+                        { scale: report._id === newReport?._id ? scaleAnim : 1 }
+                      ],
+                      opacity: report._id === newReport?._id ? opacityAnim : 1,
+                    }}
+                  >
+                    <Image
+                      source={disasterPinImages[report.type] || disasterPinImages['Other']}
+                      style={{ width: 24, height: 24 }}
+                      resizeMode="contain"
+                    />
+                  </Animated.View>
+                )}
+              </View>
             </Marker>
           ))}
 
-          {/* User location */}
           {userLoc && (
             <Marker coordinate={userLoc} title="You">
               <View
@@ -150,7 +219,6 @@ export default function MapScreen() {
             </Marker>
           )}
 
-          {/* Government buildings */}
           {pasigGovBuildings.map((build, idx) => (
             <Marker key={`gov-${idx}`} coordinate={build.coordinate} title={build.title} description={build.description}>
               <View style={{ alignItems: 'center' }}>
@@ -167,7 +235,6 @@ export default function MapScreen() {
                 >
                   <Building color="white" size={15} />
                 </View>
-
                 <View
                   style={{
                     width: 0,
@@ -186,44 +253,94 @@ export default function MapScreen() {
           ))}
         </MapView>
 
-        {/* Location button */}
         <TouchableOpacity
           style={mapStyles.locationButton}
           onPress={() => {
-            if (userLoc) {
-              mapRef.current?.animateToRegion({ ...userLoc, latitudeDelta: 0.002, longitudeDelta: 0.002 });
-            }
+            if (userLoc) mapRef.current?.animateToRegion({ ...userLoc, latitudeDelta: 0.002, longitudeDelta: 0.002 });
           }}
         >
           <MapPin size={20} color="#3B82F6" />
         </TouchableOpacity>
 
-        {/* Zoom controls */}
+        <TouchableOpacity
+          style={{
+            position: 'absolute',
+            bottom: 210, // under the location button
+            right: 10,
+            backgroundColor: '#3B82F6',
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+            elevation: 10,
+            zIndex: 10
+          }}
+          onPress={async () => {
+            try {
+              // Show ActivityIndicator immediately
+              setLoadingMarkers(reportData.map(r => r._id));
+
+              // Fetch latest reports
+              const res = await fetch('https://safepasig-backend.onrender.com/reports');
+              const data = await res.json();
+
+              const reports = data.map((r: any) => ({
+                ...r,
+                latitude: parseFloat(r.latitude),
+                longitude: parseFloat(r.longitude),
+              }));
+
+              // Include newReport if exists
+              if (newReport && !reports.find((r: any) => r._id === newReport._id)) {
+                reports.push({
+                  ...newReport,
+                  latitude: parseFloat(newReport.latitude),
+                  longitude: parseFloat(newReport.longitude),
+                });
+              }
+
+              setReportData(reports);
+
+              // Animate map to the newReport
+              if (newReport) {
+                mapRef.current?.animateToRegion({
+                  latitude: parseFloat(newReport.latitude),
+                  longitude: parseFloat(newReport.longitude),
+                  latitudeDelta: 0.001,
+                  longitudeDelta: 0.001,
+                }, 1000);
+              }
+
+              // Remove loading state after a short delay to allow rendering
+              setTimeout(() => setLoadingMarkers([]), 300);
+
+            } catch (error) {
+              console.error('Failed to reload reports:', error);
+            }
+          }}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reload Map</Text>
+        </TouchableOpacity>
+
+
+        
+
         <View style={mapStyles.zoomControls}>
-          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomIn}>
-            <Plus size={20} color="#3B82F6" />
-          </TouchableOpacity>
+          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomIn}><Plus size={20} color="#3B82F6" /></TouchableOpacity>
           <View style={mapStyles.zoomDivider} />
-          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomOut}>
-            <Minus size={20} color="#3B82F6" />
-          </TouchableOpacity>
+          <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomOut}><Minus size={20} color="#3B82F6" /></TouchableOpacity>
         </View>
 
-        {/* Bottom sheet */}
         <View style={mapStyles.bottomSheet}>
           <TouchableOpacity style={mapStyles.toggleButton} onPress={toggleMapType}>
             <Layers size={20} color="#1F2937" />
             <Text style={mapStyles.toggleText}>Toggle Map Layers</Text>
           </TouchableOpacity>
-
           <View style={mapStyles.routeCard}>
             <View style={mapStyles.routeHeader}>
               <MapPin size={16} color="#3B82F6" />
               <Text style={mapStyles.routeTitle}>Suggested Safe Route</Text>
             </View>
-            <Text style={mapStyles.routeDescription}>
-              Current route analysis: Avoid Ortigas Ave (flooding).
-            </Text>
+            <Text style={mapStyles.routeDescription}>Current route analysis: Avoid Ortigas Ave (flooding).</Text>
             <Text style={mapStyles.routeSuggestion}>Suggested: C5 Road → Meralco Ave</Text>
           </View>
         </View>

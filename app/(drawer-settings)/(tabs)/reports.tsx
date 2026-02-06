@@ -298,40 +298,53 @@ export default function ReportsScreen() {
             </View>
           ) : (
             reportsData.map(report => (
-              <View key={report._id} style={reportsStyles.reportCard}>
-                <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
-                  <View style={reportsStyles.iconCircle}>
-                    {report.mediaUrl?.endsWith('.mp4') ? (
-                      <Video size={28} color="#B91C1C" />
-                    ) : report.mediaUrl ? (
-                      <Image
-                        source={{ uri: `https://safepasig-backend.onrender.com/${report.mediaUrl}` }}
-                        style={{ width: 50, height: 50, borderRadius: 8 }}
-                      />
-                    ) : (
-                      <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#eee' }} />
-                    )}
+              <TouchableOpacity
+                key={report._id}
+                onPress={() => navigation.navigate('map', {
+                  focusReport: JSON.stringify({
+                    latitude: report.latitude,
+                    longitude: report.longitude,
+                    type: report.type,
+                    description: report.description,
+                    _id: report._id
+                  })
+                })}
+              >
+                <View key={report._id} style={reportsStyles.reportCard}>
+                  <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
+                    <View style={reportsStyles.iconCircle}>
+                      {report.mediaUrl?.endsWith('.mp4') ? (
+                        <Video size={28} color="#B91C1C" />
+                      ) : report.mediaUrl ? (
+                        <Image
+                          source={{ uri: `https://safepasig-backend.onrender.com/${report.mediaUrl}` }}
+                          style={{ width: 50, height: 50, borderRadius: 8 }}
+                        />
+                      ) : (
+                        <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#eee' }} />
+                      )}
+                    </View>
+
+                    <View style={reportsStyles.statusBadge}>
+                      <Text style={reportsStyles.statusIcon}>
+                        {report.status === 'Verified' ? '✓' : '⏱'}
+                      </Text>
+                    </View>
                   </View>
 
-                  <View style={reportsStyles.statusBadge}>
-                    <Text style={reportsStyles.statusIcon}>
-                      {report.status === 'Verified' ? '✓' : '⏱'}
-                    </Text>
+                  <View style={reportsStyles.reportContent}>
+                    <Text style={reportsStyles.locationText}>{report.description}</Text>
+                    <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
                   </View>
-                </View>
 
-                <View style={reportsStyles.reportContent}>
-                  <Text style={reportsStyles.locationText}>{report.description}</Text>
-                  <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
+                  <TouchableOpacity
+                    style={{ position: 'absolute', top: 10, right: 10 }}
+                    onPress={() => confirmDeleteReport(report._id)}
+                  >
+                    <Trash2 size={20} color="#B91C1C" />
+                  </TouchableOpacity>
                 </View>
-
-                <TouchableOpacity
-                  style={{ position: 'absolute', top: 10, right: 10 }}
-                  onPress={() => confirmDeleteReport(report._id)}
-                >
-                  <Trash2 size={20} color="#B91C1C" />
-                </TouchableOpacity>
-              </View>
+              </TouchableOpacity>
             ))
           )}
 
