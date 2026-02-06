@@ -50,8 +50,8 @@ export default function ReportsScreen() {
       form.append("description", `${street}, ${selectedBrgy}`);
       form.append("barangay", selectedBrgy);
       form.append("street", street);
-      form.append("lat", String(loc.coords.latitude));
-      form.append("lng", String(loc.coords.longitude));
+      form.append("latitude", String(loc.coords.latitude));
+      form.append("longitude", String(loc.coords.longitude));
 
       if (imageUri) {
         const fileName = imageUri.split('/').pop();
@@ -81,8 +81,8 @@ export default function ReportsScreen() {
           ...prev,
           {
             _id: data.report._id,
-            lat: data.report.lat,
-            lng: data.report.lng,
+            latitude: data.report.latitude,
+            longitude: data.report.longitude,
             type: data.report.type,
             description: `${data.report.street}, ${data.report.barangay}`,
             mediaUrl: data.report.mediaUrl,
@@ -199,7 +199,7 @@ export default function ReportsScreen() {
           {reportsData.map((report) => (
             <Marker
               key={report._id}
-              coordinate={{ latitude: report.lat, longitude: report.lng }}
+              coordinate={{ latitude: report.latitude, longitude: report.longitude }}
               title={report.type}
               description={`${report.type} – ${report.description}`}
             />
