@@ -43,10 +43,16 @@ export default function ReportsScreen() {
     }
 
     try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission denied', 'Location permission is required.');
+        return;
+      }
+
       const loc = await Location.getCurrentPositionAsync({});
       const form = new FormData();
 
-      form.append("type", "Fire"); // You can replace with a type input later
+      form.append("type", "Fire");
       form.append("description", `${street}, ${selectedBrgy}`);
       form.append("barangay", selectedBrgy);
       form.append("street", street);
@@ -55,28 +61,26 @@ export default function ReportsScreen() {
 
       if (imageUri) {
         const fileName = imageUri.split('/').pop();
-        const fileType = imageUri.split('.').pop();
-        form.append("media", {
-          uri: imageUri,
-          name: fileName,
-          type: `image/${fileType}`,
-        } as any);
+        const fileType = `image/${fileName?.split('.').pop()}`;
+        form.append("media", { uri: imageUri, name: fileName, type: fileType } as any);
       }
+
+      console.log("Submitting report:", { street, selectedBrgy, imageUri });
 
       const res = await fetch('https://safepasig-backend.onrender.com/reports', {
         method: 'POST',
         body: form,
-        headers: { 'Content-Type': 'multipart/form-data' },
       });
 
+      console.log('Response status:', res.status);
       const data = await res.json();
+      console.log('Response data:', data);
+
       if (data.success) {
         Alert.alert('Success', 'Report submitted successfully!');
         setImageUri(null);
         setSelectedBrgy(null);
         setStreet('');
-
-        // Add new report to state immediately
         setReportsData(prev => [
           ...prev,
           {
@@ -90,12 +94,15 @@ export default function ReportsScreen() {
             createdAt: data.report.createdAt,
           }
         ]);
+      } else {
+        Alert.alert('Error', 'Failed to submit report');
       }
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to submit report');
     }
   };
+
 
   // Fetch recent reports from backend
   const fetchReports = async () => {
