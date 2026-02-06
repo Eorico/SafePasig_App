@@ -130,7 +130,7 @@ export default function ReportsScreen() {
             <Picker
               selectedValue={selectedBrgy}
               onValueChange={(itemValue: any) => setSelectedBrgy(itemValue)}
-              style={{ marginVertical: 10 }}
+              style={{ marginVertical: 10, color: '#fff' }}
             >
               <Picker.Item label="Select Barangay" value={null} />
               {barangays.map((b) => (
@@ -141,6 +141,7 @@ export default function ReportsScreen() {
             {/* Street Input */}
             <TextInput
               placeholder="Enter street/village"
+              placeholderTextColor={"gray"}
               value={street}
               onChangeText={setStreet}
               style={{
@@ -149,6 +150,7 @@ export default function ReportsScreen() {
                 borderRadius: 8,
                 padding: 8,
                 marginBottom: 10,
+                color: '#fff'
               }}
             />
 
