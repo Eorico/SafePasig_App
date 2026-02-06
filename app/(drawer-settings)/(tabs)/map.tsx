@@ -1,4 +1,4 @@
-import { View, Text, TouchableOpacity, Image, ActivityIndicator, Animated } from 'react-native';
+import { View, Text, TouchableOpacity, Image, ActivityIndicator, Animated, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { MapPin, Layers, Building, Plus, Minus, X } from 'lucide-react-native';
 import { mapStyles } from '@/app/appStyles/map.style';
@@ -32,15 +32,27 @@ export default function MapScreen() {
 
   useEffect(() => {
     const fetchSOS = async () => {
-      const res = await fetch('https://safepasig-backend.onrender.com/SOS');
-      const data = await res.json();
-      setSosList(data);
-    }
+      try {
+        const res = await fetch('https://safepasig-backend.onrender.com/SOS');
+        const data = await res.json();
+
+        const newSOS = data.find((sos: any) => !sosList.some(s => s._id === sos._id));
+        if (newSOS) {
+          Vibration.vibrate([300, 300, 300, 300]); // vibrate on new SOS
+          setNewAlertReport(newSOS);
+        }
+
+        setSosList(data);
+      } catch (err) {
+        console.error('Failed to fetch SOS:', err);
+      }
+    };
 
     fetchSOS();
-    const i = setInterval(fetchSOS, 5000);
-    return () => clearInterval(i); 
-  });
+    const interval = setInterval(fetchSOS, 5000);
+    return () => clearInterval(interval);
+  }, [sosList]);
+
 
   // Fetch reports
   useEffect(() => {
@@ -223,7 +235,7 @@ export default function MapScreen() {
             coordinate={{ latitude: sos.latitude, longitude: sos.longitude }}
           >
             <Image
-              source={require('@/assets/images/sos-pin.png')}
+              source={require('@/assets/images/emergency.png')}
               style={{ width: 40, height: 40 }}
             />
           </Marker>
