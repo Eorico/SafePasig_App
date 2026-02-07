@@ -125,15 +125,15 @@ export const reportsStyles = StyleSheet.create({
   },
   statusBadge: {
     position: 'absolute',
-    top: -4,
-    right: -4,
+    top: 2,
+    right: 1,
     width: 24,
     height: 24,
     borderRadius: 12,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#FFFFFF',
+    borderColor: '#a39e9e',
   },
   verifiedBadge: {
     backgroundColor: '#10B981',

@@ -5,13 +5,28 @@ import { SosStyles } from '@/app/appStyles/sos.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
 import call from 'react-native-phone-call';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { io } from "socket.io-client";
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
   const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
+  const socket = io("https://safepasig-backend.onrender.com");
 
-   const getUserLoc = async () => {
+  useEffect(() => {
+    socket.on("sos", (data: any) => {
+      Alert.alert(
+        "SOS Alert Received",
+        `An SOS alert was triggered nearby!\nLatitude: ${data.latitude}\nLongitude: ${data.longitude}`
+      );
+      Vibration.vibrate([500, 500, 500]);
+    });
+    return () => {
+      socket.off("sos");
+    };
+  }, []);
+
+  const getUserLoc = async () => {
     const {status} = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {
       Alert.alert("Permission Denied", "Location permission is required");
@@ -24,11 +39,46 @@ export default function SOSScreen() {
 
   const triggerSOS = async () => {
     Vibration.vibrate([500, 500, 500]);
+
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      Alert.alert("Permission Denied", "Location permission is required to trigger SOS");
+      return;
+    }
+
+    const location = await Location.getCurrentPositionAsync({});
+    const coords = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+    setLoc(coords);
+
+    try {
+      const response = await fetch('https://safepasig-backend.onrender.com/sos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(coords),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        Alert.alert(
+          "SOS triggered", 
+          `Your SOS has been sent!\nLocation: ${coords.latitude}, ${coords.longitude}`
+        );
+      }
+      
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", "Failed to send SOS");
+    }
+
     await getUserLoc();
+
     Alert.alert(
       'SOS Triggered',
       `Your SOS has been sent!\nLocation: ${loc?.latitude ?? 'Fetching...'}, ${loc?.longitude ?? 'Fetching...'}`,
     );
+
   }
 
   const quickCall911 = () => {

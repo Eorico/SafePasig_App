@@ -8,6 +8,8 @@ import { pasigGovBuildings } from '@/app/components/objects/mapsObj';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { disasterPinImages } from '@/app/components/objects/disasterPins';
+import { io } from "socket.io-client";
+import { parse } from 'react-native-svg';
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
@@ -28,7 +30,41 @@ export default function MapScreen() {
   // Animated scale + fade
   const scaleAnim = useRef(new Animated.Value(0)).current;
   const opacityAnim = useRef(new Animated.Value(0)).current;
-  
+
+  const socket = io("https://safepasig-backend.onrender.com");
+
+  useEffect(() => {
+
+    socket.on("sos-alert", (data: any) => {
+      setNewAlertReport({
+        _id: data._id,
+        type: data.type,
+        description: data.description,
+        latitude: parseFloat(data.latitude),
+        longitude: parseFloat(data.longitude),
+        createdAt: new Date().toISOString(),
+      });
+
+      setReportData(prev => [
+        {
+          _id: data._id,
+          type: data.type,
+          description: data.description,
+          latitude: parseFloat(data.latitude),
+          longitude: parseFloat(data.longitude),
+          createdAt: new Date().toISOString(),
+        },
+        ...prev
+      ]);
+
+      Vibration.vibrate([500, 500, 500]);
+    });
+
+    return () => {
+      socket.off("sos-alert");
+    };
+
+  }, []);
 
   // Fetch reports
   useEffect(() => {

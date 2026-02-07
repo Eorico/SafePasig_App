@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { Upload, Video, Trash2 } from 'lucide-react-native';
+import { Upload, Video, Trash2, User, Check, Clock } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
@@ -283,7 +283,7 @@ export default function ReportsScreen() {
                 })}
               >
                 <View style={reportsStyles.reportCard}>
-                  <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
+                  <View style={[reportsStyles.reportIcon, { backgroundColor: '#4070c8' }]}>
                     <View style={reportsStyles.iconCircle}>
                       {isVideo ? (
                         <Video size={28} color="#B91C1C" />
@@ -293,12 +293,22 @@ export default function ReportsScreen() {
                           style={{ width: 50, height: 50, borderRadius: 8 }}
                         />
                       ) : (
-                        <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#eee' }} />
+                        <View style={{ 
+                          width: 50, 
+                          height: 50, 
+                          borderRadius: 8, 
+                          backgroundColor: '#eee' ,
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                          }}
+                        >
+                          <User size={24} color="#333" />
+                        </View>
                       )}
                     </View>
                     <View style={reportsStyles.statusBadge}>
                       <Text style={reportsStyles.statusIcon}>
-                        {report.status === 'Verified' ? '✓' : '⏱'}
+                        {report.status === 'Verified' ? <Check size={18} color="#059669" /> : <Clock size={18} color="#9CA3AF" />}
                       </Text>
                     </View>
                   </View>

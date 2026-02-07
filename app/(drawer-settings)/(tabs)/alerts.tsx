@@ -6,6 +6,7 @@ import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
 import { getAlertColor, ALERT_COLORS } from '@/app/functionalities/alerts/alertsColor.img';
+import { io } from "socket.io-client";
 
 export default function AlertsScreen() {
   const navigation = useNavigation<any>();
@@ -20,8 +21,29 @@ export default function AlertsScreen() {
   const LAT = 14.5767;
   const LON = 121.0851;
 
-  
- 
+  const socket  = io("https://safepasig-backend.onrender.com");
+
+  useEffect(() => {
+
+    socket.on('sos-alert', (data: any) => {
+      setDisasterReports(prev => [
+        {
+          _id: data._id,
+          type: data.type,
+          description: data.description,
+          latitude: parseFloat(data.latitude),
+          longitude: parseFloat(data.longitude),
+          createdAt: new Date().toISOString(),
+        },
+        ...prev
+      ])
+    });
+
+    return () => {
+      socket.off('sos-alert');
+    };
+
+  }, []);
 
   // Fetch weather
   useEffect(() => {
