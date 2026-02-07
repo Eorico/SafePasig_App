@@ -19,7 +19,6 @@ export default function MapScreen() {
   const [mapType, setMapType] = useState<'standard' | 'satellite' | 'hybrid' | 'terrain'>('standard');
 
   const [newAlertReport, setNewAlertReport] = useState<any | null>(null);
-  const [sosList, setSosList] = useState<any[]>([]);
 
   const params = useLocalSearchParams();
   const newReport = params.newReport ? JSON.parse(params.newReport as string) : null;
@@ -206,19 +205,6 @@ export default function MapScreen() {
           </View>
         )}
 
-        {sosList.map(sos => (
-          <Marker
-            key={sos._id}
-            coordinate={{ latitude: sos.latitude, longitude: sos.longitude }}
-            title="SOS Alert"
-            description="Someone nearby needs help!"
-          >
-            <Image
-              source={require('@/assets/images/emergency.png')}
-              style={{ width: 40, height: 40 }}
-            />
-          </Marker>
-        ))}
 
       <View style={mapStyles.mapWrapper}>
         <MapView
@@ -233,9 +219,10 @@ export default function MapScreen() {
             longitudeDelta: 0.002,
           }}
         >
-          {reportData.map(report => (
+          {reportData.filter(report => report && report._id)
+            .map((report, index) => (
             <Marker
-              key={report._id}
+              key={`${report._id}-${index}`}
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
               title={report.type}
               description={report.description}

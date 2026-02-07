@@ -5,29 +5,37 @@ import { reportsStyles } from '@/app/appStyles/reports.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
- 
+
 import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 
-import { disasterPinImages } from '@/app/components/objects/disasterPins';
+// Define Report type for TypeScript safety
+interface Report {
+  _id: string;
+  type: string;
+  description: string;
+  barangay?: string;
+  street?: string;
+  latitude: number;
+  longitude: number;
+  mediaUrl?: string;
+  status?: 'Verified' | 'Pending';
+  createdAt: string;
+}
 
 export default function ReportsScreen() {
   const navigation = useNavigation<any>();
 
   const [imageUri, setImageUri] = useState<string | null>(null);
-  const [reportsData, setReportsData] = useState<any[]>([]);
+  const [reportsData, setReportsData] = useState<Report[]>([]);
   const [selectedBrgy, setSelectedBrgy] = useState<string | null>(null);
   const [street, setStreet] = useState<string>('');
-
   const [selectedType, setSelectedType] = useState<string>('Fire');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Other'];
 
-  const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
-
- 
-  // List of barangays in Pasig
   const barangays = [
     'Bagong Ilog', 'Bagong Katipunan', 'Bambang', 'Kapitolyo', 'Karangalan', 
     'Manggahan', 'Oranbo', 'Palatiw', 'Pasig Proper', 'Pinagbuhatan', 
@@ -84,9 +92,7 @@ export default function ReportsScreen() {
         setStreet('');
         setSelectedType('Fire');
 
-        // REFRESH from backend
-        fetchReports();
-
+        fetchReports(); // refresh reports
         navigation.navigate('map', { newReport: JSON.stringify(data.report) });
       } else {
         Alert.alert('Error', 'Failed to submit report');
@@ -99,29 +105,40 @@ export default function ReportsScreen() {
     }
   };
 
+  // --- Fast, safe, one-by-one fetching ---
   const fetchReports = async () => {
     setIsLoadingReports(true);
     try {
       const res = await fetch('https://safepasig-backend.onrender.com/reports');
-      const data = await res.json();
+      const data: Report[] = await res.json();
 
-      const sortedReports = data.sort(
-        (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      // Filter invalid reports and sort newest first
+      const sortedReports = data
+        .filter(report => report && report._id)
+        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      setReportsData([]);
+      setReportsData([]); // clear previous
 
-      sortedReports.forEach((report: any, index: number) => {
-        setTimeout(() => {
-          setReportsData(prev => [...prev, report]);
-        }, index * 50);  
-      });
+      // Add reports one by one quickly
+      let i = 0;
+      const addNext = () => {
+        if (i < sortedReports.length) {
+          const report = sortedReports[i];
+          if (report && report._id) { // ✅ only add valid reports
+            setReportsData(prev => [...prev, report]);
+          }
+          i++;
+          setTimeout(addNext, 20);
+        }
+      };
+
+      addNext();
 
     } catch (err) {
       console.error(err);
       Alert.alert('Error', 'Failed to load reports');
     } finally {
-      setIsLoadingReports(false); 
+      setIsLoadingReports(false);
     }
   };
 
@@ -130,7 +147,6 @@ export default function ReportsScreen() {
     fetchReports();
   }, []);
 
-  // 1️⃣ Delete function with confirmation
   const confirmDeleteReport = (reportId: string) => {
     Alert.alert(
       'Confirm Delete',
@@ -150,10 +166,7 @@ export default function ReportsScreen() {
     try {
       const res = await fetch(`https://safepasig-backend.onrender.com/reports/${reportId}`, {
         method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          
-        }
+        headers: { 'Content-Type': 'application/json' }
       });
 
       if (!res.ok) {
@@ -166,12 +179,8 @@ export default function ReportsScreen() {
       const data = await res.json();
 
       if (data.success) {
-        // Remove from local state
-        setReportsData(prev => prev.filter(r => r._id !== reportId));
-
-        // Optional: notify map screen to remove marker
+        setReportsData(prev => prev.filter(r => r && r._id !== reportId));
         navigation.navigate('map', { deletedReportId: reportId });
-
         Alert.alert('Deleted', 'Report successfully deleted.');
       } else {
         Alert.alert('Error', 'Failed to delete report.');
@@ -181,6 +190,7 @@ export default function ReportsScreen() {
       Alert.alert('Error', 'Failed to delete report.');
     }
   };
+
   return (
     <View style={reportsStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()} />
@@ -196,53 +206,27 @@ export default function ReportsScreen() {
             </Text>
 
             {/* Disaster Type Picker */}
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#fff',
-                borderRadius: 8,
-                marginVertical: 10,
-                overflow: 'hidden', // ensures borderRadius works
-              }}
-            >
+            <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
                 selectedValue={selectedType}
                 onValueChange={(itemValue: any) => setSelectedType(itemValue)}
-                dropdownIconColor="#fff" // Android dropdown arrow color
-                style={{
-                  color: '#fff',
-                  backgroundColor: 'transparent', // keep it transparent inside the border
-                }}
+                dropdownIconColor="#fff"
+                style={{ color: '#fff', backgroundColor: 'transparent' }}
               >
-                {disasterTypes.map(type => (
-                  <Picker.Item key={type} label={type} value={type} />
-                ))}
+                {disasterTypes.map(type => (<Picker.Item key={type} label={type} value={type} />))}
               </Picker>
             </View>
 
             {/* Barangay Picker */}
-            <View
-              style={{
-                borderWidth: 1,
-                borderColor: '#fff',
-                borderRadius: 8,
-                marginVertical: 10,
-                overflow: 'hidden',
-              }}
-            >
+            <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
                 selectedValue={selectedBrgy}
                 onValueChange={(itemValue: any) => setSelectedBrgy(itemValue)}
                 dropdownIconColor="#fff"
-                style={{
-                  color: '#fff',
-                  backgroundColor: 'transparent',
-                }}
+                style={{ color: '#fff', backgroundColor: 'transparent' }}
               >
                 <Picker.Item label="Select Barangay" value={null} />
-                {barangays.map(b => (
-                  <Picker.Item key={b} label={b} value={b} />
-                ))}
+                {barangays.map(b => (<Picker.Item key={b} label={b} value={b} />))}
               </Picker>
             </View>
 
@@ -251,14 +235,7 @@ export default function ReportsScreen() {
               placeholderTextColor="gray"
               value={street}
               onChangeText={setStreet}
-              style={{
-                borderWidth: 1,
-                borderColor: '#ccc',
-                borderRadius: 8,
-                padding: 8,
-                marginBottom: 10,
-                color: '#fff'
-              }}
+              style={{ borderWidth: 1, borderColor: '#ccc', borderRadius: 8, padding: 8, marginBottom: 10, color: '#fff' }}
             />
 
             <TouchableOpacity style={reportsStyles.submitButton} onPress={pickMedia}>
@@ -266,54 +243,49 @@ export default function ReportsScreen() {
               <Text style={reportsStyles.submitButtonText}>Upload Image/Video</Text>
             </TouchableOpacity>
 
-            {imageUri && (
-              <Image source={{ uri: imageUri }} style={{ width: 100, height: 100, marginTop: 10, borderRadius: 8 }} />
-            )}
+            {imageUri && (<Image source={{ uri: imageUri }} style={{ width: 100, height: 100, marginTop: 10, borderRadius: 8 }} />)}
 
             <TouchableOpacity
               style={[reportsStyles.submitButton, { marginTop: 10, opacity: isSubmitting ? 0.6 : 1 }]}
               onPress={submitReport}
               disabled={isSubmitting}
             >
-              <Text style={reportsStyles.submitButtonText}>
-               {isSubmitting ? (
-                <>
-                  <ActivityIndicator size="small" color="#fff" style={{ marginRight: 8 }} />
-                  <Text style={reportsStyles.submitButtonText}>Submitting...</Text>
-                </>
-               ) : (
+              {isSubmitting ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
                 <Text style={reportsStyles.submitButtonText}>Submit Report</Text>
-               )}
-              </Text>
+              )}
             </TouchableOpacity>
           </View>
         </View>
 
-         
         <Text style={reportsStyles.sectionTitle}>Recent Pasig Reports</Text>
-         {isLoadingReports ? (
-            <View style={{ marginTop: 20, alignItems: 'center' }}>
-              <ActivityIndicator size="large" color="#3B82F6" />
-              <Text style={{ marginTop: 10, color: '#555' }}>Loading reports...</Text>
-            </View>
-          ) : (
-            reportsData.map(report => (
+        {isLoadingReports ? (
+          <View style={{ marginTop: 20, alignItems: 'center' }}>
+            <ActivityIndicator size="large" color="#3B82F6" />
+            <Text style={{ marginTop: 10, color: '#555' }}>Loading reports...</Text>
+          </View>
+        ) : (
+          reportsData.filter(Boolean).map((report, index) => {
+            if (!report) return null;
+            const isVideo = report.mediaUrl?.endsWith('.mp4');
+            return (
               <TouchableOpacity
-                key={report._id}
+                key={report._id || index}
                 onPress={() => navigation.navigate('map', {
                   focusReport: JSON.stringify({
                     latitude: report.latitude,
                     longitude: report.longitude,
                     type: report.type,
                     description: report.description,
-                    _id: report._id
-                  })
+                    _id: report._id,
+                  }),
                 })}
               >
-                <View key={report._id} style={reportsStyles.reportCard}>
+                <View style={reportsStyles.reportCard}>
                   <View style={[reportsStyles.reportIcon, { backgroundColor: '#FECACA' }]}>
                     <View style={reportsStyles.iconCircle}>
-                      {report.mediaUrl?.endsWith('.mp4') ? (
+                      {isVideo ? (
                         <Video size={28} color="#B91C1C" />
                       ) : report.mediaUrl ? (
                         <Image
@@ -324,7 +296,6 @@ export default function ReportsScreen() {
                         <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#eee' }} />
                       )}
                     </View>
-
                     <View style={reportsStyles.statusBadge}>
                       <Text style={reportsStyles.statusIcon}>
                         {report.status === 'Verified' ? '✓' : '⏱'}
@@ -345,9 +316,9 @@ export default function ReportsScreen() {
                   </TouchableOpacity>
                 </View>
               </TouchableOpacity>
-            ))
-          )}
-
+            );
+          })
+        )}
       </ScrollView>
     </View>
   );
