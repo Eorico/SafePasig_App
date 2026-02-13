@@ -33,14 +33,6 @@ export default function ReportsScreen() {
   const [selectedType, setSelectedType] = useState<string>('Fire');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<{ 
-    id: string;           
-    token?: string;       
-    isPWD: boolean;
-  }>({
-    id: 'anonymous',       
-    isPWD: false
-  });
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Other'];
 
@@ -79,7 +71,6 @@ export default function ReportsScreen() {
       form.append('street', street);
       form.append('latitude', String(latitude));
       form.append('longitude', String(longitude));
-      form.append('isPWD', String(currentUser.isPWD));
 
       if (imageUri) {
         const fileName = imageUri.split('/').pop();
@@ -100,7 +91,7 @@ export default function ReportsScreen() {
         setSelectedBrgy(null);
         setStreet('');
         setSelectedType('Fire');
-         setCurrentUser(prev => ({ ...prev, isPWD: !prev.isPWD }));
+
         fetchReports(); // refresh reports
         navigation.navigate('map', { newReport: JSON.stringify(data.report) });
       } else {
@@ -202,11 +193,7 @@ export default function ReportsScreen() {
 
   return (
     <View style={reportsStyles.container}>
-      <Header 
-        onMenuPress={() => navigation.openDrawer()} 
-        currentUser={currentUser} 
-        setCurrentUser={setCurrentUser} 
-      />
+      <Header onMenuPress={() => navigation.openDrawer()} />
       <ScrollView style={reportsStyles.scrollView} contentContainerStyle={reportsStyles.content}>
         <Text style={reportsStyles.pageTitle}>User Reports</Text>
 

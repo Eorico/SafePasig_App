@@ -7,18 +7,9 @@ import { useNavigation } from 'expo-router';
 import { getCategoryColor } from '@/app/functionalities/hotlines/hotlinesColor.img';
 import * as Clipboard from 'expo-clipboard';
 import call from 'react-native-phone-call';
-import { useState } from 'react';
 
 export default function HotlinesScreen() {
   const navigation = useNavigation<any>();
-  const [currentUser, setCurrentUser] = useState<{ 
-    id: string;           
-    token?: string;       
-    isPWD: boolean;
-  }>({
-    id: 'anonymous',       
-    isPWD: false
-  });
 
   const handleCall = (number: string) => {
     const args = {
@@ -35,12 +26,7 @@ export default function HotlinesScreen() {
 
   return (
     <View style={hotlinesStyles.container}>
-      
-      <Header 
-        onMenuPress={() => navigation.openDrawer()} 
-        currentUser={currentUser} 
-        setCurrentUser={setCurrentUser} 
-      />
+      <Header onMenuPress={() => navigation.openDrawer()}/>
       <ScrollView style={hotlinesStyles.scrollView} contentContainerStyle={hotlinesStyles.content}>
         <Text style={hotlinesStyles.pageTitle}>Emergency Hotlines</Text>
 

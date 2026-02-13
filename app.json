@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "SafePasigApp",
-    "slug": "SafePasigApp",
+    "name": "Safe Pasig",
+    "slug": "SafePasig",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/pasigLogo.png",
@@ -20,7 +20,7 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.eoricodev12.SafePasigApp"
+      "package": "com.eoricodev12.SafePasig"
     },
     "web": {
       "output": "static",

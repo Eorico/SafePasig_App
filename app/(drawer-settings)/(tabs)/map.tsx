@@ -33,15 +33,6 @@ export default function MapScreen() {
 
   const socket = io("https://safepasig-backend.onrender.com");
 
-  const [currentUser, setCurrentUser] = useState<{ 
-    id: string;           
-    token?: string;       
-    isPWD: boolean;
-  }>({
-    id: 'anonymous',       
-    isPWD: false
-  });
-
   useEffect(() => {
 
     socket.on("sos-alert", (data: any) => {
@@ -221,11 +212,7 @@ export default function MapScreen() {
 
   return (
     <View style={mapStyles.container}>
-      <Header 
-        onMenuPress={() => navigation.openDrawer()} 
-        currentUser={currentUser} 
-        setCurrentUser={setCurrentUser} 
-      />
+      <Header onMenuPress={() => navigation.openDrawer()} />
 
         {newAlertReport && (
           <View style={{
