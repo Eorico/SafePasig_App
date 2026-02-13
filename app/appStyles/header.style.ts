@@ -14,6 +14,21 @@ export const headerStyles = StyleSheet.create({
     shadowRadius: 3,
     elevation: 3,
   },
+
+   overlay: {
+    ...StyleSheet.absoluteFillObject, // fill entire header
+    backgroundColor: 'rgba(59, 130, 246, 0.6)', // semi-transparent blue
+  },
+
+  content: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingTop: 5,
+  },
+
   menuButton: {
     padding: 4,
   },

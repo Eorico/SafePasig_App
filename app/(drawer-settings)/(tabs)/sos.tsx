@@ -12,6 +12,14 @@ export default function SOSScreen() {
   const navigation = useNavigation<any>();
   const [loc, setLoc] =useState<{ latitude: number; longitude: number} | null>(null);
   const socket = io("https://safepasig-backend.onrender.com");
+  const [currentUser, setCurrentUser] = useState<{ 
+    id: string;           
+    token?: string;       
+    isPWD: boolean;
+  }>({
+    id: 'anonymous',       
+    isPWD: false
+  });
 
   useEffect(() => {
     socket.on("sos", (data: any) => {
@@ -47,7 +55,11 @@ export default function SOSScreen() {
     }
 
     const location = await Location.getCurrentPositionAsync({});
-    const coords = { latitude: location.coords.latitude, longitude: location.coords.longitude };
+    const coords = { 
+      latitude: location.coords.latitude, 
+      longitude: location.coords.longitude,
+      isPWD: currentUser.isPWD
+    };
     setLoc(coords);
 
     try {
@@ -89,7 +101,11 @@ export default function SOSScreen() {
 
   return (
     <View style={SosStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()}/>
+      <Header 
+        onMenuPress={() => navigation.openDrawer()} 
+        currentUser={currentUser} 
+        setCurrentUser={setCurrentUser} 
+      />
       <ScrollView style={SosStyles.scrollView} contentContainerStyle={SosStyles.content}>
         <Text style={SosStyles.pageTitle}>Emergency SOS</Text>
 
