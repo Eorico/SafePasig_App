@@ -7,10 +7,6 @@ import { Settings } from 'lucide-react-native';
 export default function DrawerLayout() {
   const [pushNotif, setPushNotif] = useState(false);
   const [soundAlerts, setSoundAlerts] = useState(false);
-  const [vibrationAlerts, setVibrationAlerts] = useState(false);
-  const [pwdProfile, setPwdProfile] = useState(false);
-  const [autoLocation, setAutoLocation] = useState(false);
-
   const CustomDrawerContent = () => (
     <ScrollView style={drawerStyles.drawerContainer} contentContainerStyle={{ padding: 8, marginTop: 20 }}>
       <View>
@@ -35,25 +31,11 @@ export default function DrawerLayout() {
       <View style={drawerStyles.divider}/>
 
       <Text style={drawerStyles.sectionTitle}>Accessibility</Text>
-      <View style={drawerStyles.row}>
-        <Text>Vibration Alerts</Text>
-        <Switch value={vibrationAlerts} onValueChange={setVibrationAlerts} />
-      </View>
       <TouchableOpacity style={drawerStyles.button} onPress={() => Vibration.vibrate(500)}>
         <Text style={drawerStyles.buttonText}>Test Vibration</Text>
       </TouchableOpacity>
 
       <View style={drawerStyles.divider}/>
- 
-      <Text style={drawerStyles.sectionTitle}>User Profile</Text>
-      <View style={drawerStyles.row}>
-        <Text>PWD</Text>
-        <Switch value={pwdProfile} onValueChange={setPwdProfile} />
-      </View>
-      <View style={drawerStyles.row}>
-        <Text>Auto Location Sharing</Text>
-        <Switch value={autoLocation} onValueChange={setAutoLocation} />
-      </View>
     </ScrollView>
   );
 
