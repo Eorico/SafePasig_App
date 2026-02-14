@@ -41,6 +41,8 @@ export default function MapScreen() {
 
   const [newAlertReport, setNewAlertReport] = useState<any | null>(null);
 
+  const nearestBuilding = newAlertReport ? getNearestSafeBuilding(newAlertReport) : null;
+
   const params = useLocalSearchParams();
   const newReport = params.newReport ? JSON.parse(params.newReport as string) : null;
   const focusReport = params.focusReport ? JSON.parse(params.focusReport as string) : null;
@@ -53,6 +55,8 @@ export default function MapScreen() {
   const socket = io("https://safepasig-backend.onrender.com");
 
   const [safeLocations, setSafeLocations] = useState<{ reportId: string; building: any }[]>([]);
+  const [alertsForRoute, setAlertsForRoute] = useState<any[]>([]);
+
 
   useEffect(() => {
     const locations = reportData.map(report => {
@@ -65,26 +69,19 @@ export default function MapScreen() {
   useEffect(() => {
 
     socket.on("sos-alert", (data: any) => {
-      setNewAlertReport({
+      const alertObj = {
         _id: data._id,
         type: data.type,
         description: data.description,
         latitude: parseFloat(data.latitude),
         longitude: parseFloat(data.longitude),
         createdAt: new Date().toISOString(),
-      });
+      };
 
-      setReportData(prev => [
-        {
-          _id: data._id,
-          type: data.type,
-          description: data.description,
-          latitude: parseFloat(data.latitude),
-          longitude: parseFloat(data.longitude),
-          createdAt: new Date().toISOString(),
-        },
-        ...prev
-      ]);
+      setNewAlertReport(alertObj);
+
+      setReportData(prev => [alertObj, ...prev]);
+      setAlertsForRoute(prev => [...prev, alertObj]);  
 
       Vibration.vibrate([500, 500, 500]);
     });
@@ -128,31 +125,32 @@ export default function MapScreen() {
     fetchReports();
   }, []);
 
-  // Animate new report marker with fade + scale after a short delay
+ // ------------------- FIXED ANIMATION FOR SOCKET & POLLING -------------------
   useEffect(() => {
-    if (newReport && loadingMarkers.includes(newReport._id)) {
+    if (newAlertReport && !loadingMarkers.includes(newAlertReport._id)) {
+      // Mark loading to trigger spinner/animation
+      setLoadingMarkers(prev => [...prev, newAlertReport._id]);
+
       const timer = setTimeout(() => {
-        // Animate map
         mapRef.current?.animateToRegion({
-          latitude: parseFloat(newReport.latitude),
-          longitude: parseFloat(newReport.longitude),
+          latitude: parseFloat(newAlertReport.latitude),
+          longitude: parseFloat(newAlertReport.longitude),
           latitudeDelta: 0.001,
           longitudeDelta: 0.001,
         }, 1000);
 
-        // Animate marker
         Animated.parallel([
           Animated.spring(scaleAnim, { toValue: 1, friction: 5, useNativeDriver: true }),
           Animated.timing(opacityAnim, { toValue: 1, duration: 300, useNativeDriver: true }),
         ]).start(() => {
-          // Done loading
-          setLoadingMarkers(prev => prev.filter(id => id !== newReport._id));
+          setLoadingMarkers(prev => prev.filter(id => id !== newAlertReport._id));
         });
-      }, 300); // small delay to see spinner
+      }, 300);
 
       return () => clearTimeout(timer);
     }
-  }, [loadingMarkers, newReport]);
+  }, [newAlertReport]);
+
 
   // Focus report
   useEffect(() => {
@@ -486,40 +484,44 @@ export default function MapScreen() {
               <Text style={mapStyles.routeTitle}>Suggested Safe Route</Text>
             </View>
 
-              {newAlertReport && (
+              {newAlertReport && nearestBuilding && (
                 <>
-                  {safeLocations.find(loc => loc.reportId === newAlertReport._id) ? (
-                    <>
-                      <Text style={mapStyles.routeDescription}>
-                        Nearest safe location: {
-                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building?.title
-                        }
-                      </Text>
-                      <Text style={mapStyles.routeSuggestion}>
-                        Coordinates: {
-                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.coordinate.latitude.toFixed(5)
-                        }, {
-                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.coordinate.longitude.toFixed(5)
-                        }
-                      </Text>
-                    </>
-                  ) : (
-                    <Text>No safe location found.</Text>
-                  )}
+                  <Text style={mapStyles.routeDescription}>
+                    Nearest safe location: {nearestBuilding.title}
+                  </Text>
+                  <Text style={mapStyles.routeSuggestion}>
+                    Coordinates: {nearestBuilding.coordinate.latitude.toFixed(5)}, {nearestBuilding.coordinate.longitude.toFixed(5)}
+                  </Text>
+
+                  <Polyline
+                    coordinates={[
+                      { latitude: newAlertReport.latitude, longitude: newAlertReport.longitude },
+                      nearestBuilding.coordinate
+                    ]}
+                    strokeColor="green"
+                    strokeWidth={3}
+                    lineDashPattern={[4, 6]}
+                  />
                 </>
               )}
 
-              {newAlertReport && safeLocations.find(loc => loc.reportId === newAlertReport._id) && (
-                <Polyline
-                  coordinates={[
-                    { latitude: parseFloat(newAlertReport.latitude), longitude: parseFloat(newAlertReport.longitude) },
-                    safeLocations.find(loc => loc.reportId === newAlertReport._id)!.building.coordinate
-                  ]}
-                  strokeColor="green"
-                  strokeWidth={3}
-                  lineDashPattern={[4, 6]}
-                />
-              )}
+             {alertsForRoute.map((alert) => {
+                const nearest = getNearestSafeBuilding(alert);
+                if (!nearest) return null;
+
+                return (
+                  <Polyline
+                    key={`route-${alert._id}`}
+                    coordinates={[
+                      { latitude: alert.latitude, longitude: alert.longitude },
+                      nearest.coordinate
+                    ]}
+                    strokeColor="green"
+                    strokeWidth={3}
+                    lineDashPattern={[4, 6]}
+                  />
+                );
+              })}
 
           </View>
         </View>
