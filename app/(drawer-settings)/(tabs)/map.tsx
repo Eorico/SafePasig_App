@@ -492,7 +492,7 @@ export default function MapScreen() {
                     <>
                       <Text style={mapStyles.routeDescription}>
                         Nearest safe location: {
-                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.title
+                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building?.title
                         }
                       </Text>
                       <Text style={mapStyles.routeSuggestion}>

@@ -100,6 +100,7 @@ export default function SOSScreen() {
 
         <Text style={SosStyles.description}>
           Press the SOS button to alert nearby users around Pasig District. Your location will be shared.
+          NOTE: PWD OR NORMAL PERSON IS INCLUDE ONCE THE SOS IS TRIGGERED.
         </Text>
 
         <View style={SosStyles.sosSection}>

@@ -24,6 +24,7 @@ interface Report {
   latitude: number;
   longitude: number;
   mediaUrl?: string;
+  isPWD?: boolean;
   status?: 'Verified' | 'Pending';
   createdAt: string;
 }
@@ -39,7 +40,7 @@ export default function ReportsScreen() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
-
+  const [pwdProfile, setPwdProfile] = useState(false);
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Stray Dogs','Other'];
 
@@ -84,6 +85,7 @@ export default function ReportsScreen() {
       form.append('street', street);
       form.append('latitude', String(latitude));
       form.append('longitude', String(longitude));
+      form.append('isPWD', pwdProfile ? 'true' : 'false');
 
       if (imageUri) {
         const fileName = imageUri.split('/').pop();
@@ -251,6 +253,19 @@ export default function ReportsScreen() {
               </Picker>
             </View>
 
+            {/* Person Type Picker */}
+            <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
+              <Picker
+                selectedValue={pwdProfile ? 'PWD' : 'Normal'}
+                onValueChange={(itemValue) => setPwdProfile(itemValue === 'PWD')}
+                dropdownIconColor="#fff"
+                style={{ color: '#fff', backgroundColor: 'transparent' }}
+              >
+                <Picker.Item label="Normal" value="Normal" />
+                <Picker.Item label="PWD" value="PWD" />
+              </Picker>
+            </View>
+
             {/* Barangay Picker */}
             <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
@@ -313,6 +328,7 @@ export default function ReportsScreen() {
                     longitude: report.longitude,
                     type: report.type,
                     description: report.description,
+                    isPWD: report.isPWD,
                     _id: report._id,
                   }),
                 })}
@@ -352,6 +368,12 @@ export default function ReportsScreen() {
                     <Text style={reportsStyles.locationText}>TYPE: {report.type}</Text>
                     <Text style={reportsStyles.locationText}>{report.description}</Text>
                     <Text style={reportsStyles.locationText}>DEVICE ID: {report.deviceId}</Text>
+                    {/* PWD badge */}
+                    {report.isPWD && (
+                      <Text style={{ color: report.isPWD ? '#10B981' : '#fff', fontWeight: 'bold', marginTop: 4 }}>
+                        Person: {report.isPWD ? 'PWD' : 'Normal'}
+                      </Text>
+                    )}
                     <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
                   </View>
 
