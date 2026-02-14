@@ -303,7 +303,7 @@ export default function MapScreen() {
               key={`${report._id}-${index}`}
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
               title={`${report.type} | ${report.deviceId}`}
-              description={report.description} 
+              description={`LOCATION: ${report.description} | PERSON: ${report.isPWD ? 'PWD' : 'Normal'}`} 
             >
               <View style={{ alignItems: 'center' }}>
                 {loadingMarkers.includes(report._id) ? (

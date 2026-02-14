@@ -373,6 +373,7 @@ export default function ReportsScreen() {
                       <Text style={{ color: report.isPWD ? '#10B981' : '#fff', fontWeight: 'bold', marginTop: 4 }}>
                         Person: {report.isPWD ? 'PWD' : 'Normal'}
                       </Text>
+
                     )}
                     <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
                   </View>

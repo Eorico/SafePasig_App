@@ -270,7 +270,7 @@ export default function AlertsScreen() {
                   <X size={20} color="#FFFFFF" onPress={() => dismissReportAlert(report._id)}/>
                 </TouchableOpacity>
               </View>
-              <Text style={alertStyles.alertDescription}>PERSON: {report.isPWD}</Text>
+              <Text style={alertStyles.alertDescription}>PERSON: {report.isPWD ? 'PWD' : 'Normal'}</Text>
               <Text style={alertStyles.alertDescription}>LATITUDE: {report.latitude}</Text>
               <Text style={alertStyles.alertDescription}>LONGITUDE: {report.longitude}</Text>
               <Text style={alertStyles.alertDescription}>LOCATION: {report.description}</Text>
@@ -279,7 +279,7 @@ export default function AlertsScreen() {
             </View>
           ))
         )}
-        
+
       </ScrollView>
     </View>
   );
