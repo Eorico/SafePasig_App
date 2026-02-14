@@ -10,6 +10,25 @@ import { useEffect, useRef, useState } from 'react';
 import { disasterPinImages } from '@/app/components/objects/disasterPins';
 import { valleyFaultLines } from '@/app/components/objects/faultLines';
 import { io } from "socket.io-client";
+import { getDistance } from '@/app/functionalities/saferoutes/safeRoutes';
+
+function getNearestSafeBuilding(report: { latitude: number; longitude: number }) {
+  let nearest: any = null;
+  let minDist = Infinity;
+
+  pasigGovBuildings.forEach(building => {
+    if (building.type === 'barangay' || building.type === 'police') {
+      const dist = getDistance(report.latitude, report.longitude, building.coordinate.latitude, building.coordinate.longitude);
+      if (dist < minDist) {
+        minDist = dist;
+        nearest = building;
+      }
+    }
+  });
+
+  return nearest;
+}
+
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
@@ -32,6 +51,16 @@ export default function MapScreen() {
   const opacityAnim = useRef(new Animated.Value(0)).current;
 
   const socket = io("https://safepasig-backend.onrender.com");
+
+  const [safeLocations, setSafeLocations] = useState<{ reportId: string; building: any }[]>([]);
+
+  useEffect(() => {
+    const locations = reportData.map(report => {
+      const nearest = getNearestSafeBuilding(report);
+      return { reportId: report._id, building: nearest };
+    });
+    setSafeLocations(locations);
+  }, [reportData]);
 
   useEffect(() => {
 
@@ -330,7 +359,7 @@ export default function MapScreen() {
               <View style={{ alignItems: 'center' }}>
                 <View
                   style={{
-                    backgroundColor: '#26dcd0',
+                    backgroundColor: '#2681dc',
                     width: 24,
                     height: 24,
                     borderRadius: 20,
@@ -362,7 +391,7 @@ export default function MapScreen() {
                     borderTopWidth: 12,
                     borderLeftColor: 'transparent',
                     borderRightColor: 'transparent',
-                    borderTopColor: '#26dcd0',
+                    borderTopColor: '#2681dc',
                     marginTop: -5,
                   }}
                 />
@@ -456,8 +485,42 @@ export default function MapScreen() {
               <MapPin size={16} color="#3B82F6" />
               <Text style={mapStyles.routeTitle}>Suggested Safe Route</Text>
             </View>
-            <Text style={mapStyles.routeDescription}>Current route analysis: Avoid Ortigas Ave (flooding).</Text>
-            <Text style={mapStyles.routeSuggestion}>Suggested: C5 Road → Meralco Ave</Text>
+
+              {newAlertReport && (
+                <>
+                  {safeLocations.find(loc => loc.reportId === newAlertReport._id) ? (
+                    <>
+                      <Text style={mapStyles.routeDescription}>
+                        Nearest safe location: {
+                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.title
+                        }
+                      </Text>
+                      <Text style={mapStyles.routeSuggestion}>
+                        Coordinates: {
+                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.coordinate.latitude.toFixed(5)
+                        }, {
+                          safeLocations.find(loc => loc.reportId === newAlertReport._id)?.building.coordinate.longitude.toFixed(5)
+                        }
+                      </Text>
+                    </>
+                  ) : (
+                    <Text>No safe location found.</Text>
+                  )}
+                </>
+              )}
+
+              {newAlertReport && safeLocations.find(loc => loc.reportId === newAlertReport._id) && (
+                <Polyline
+                  coordinates={[
+                    { latitude: parseFloat(newAlertReport.latitude), longitude: parseFloat(newAlertReport.longitude) },
+                    safeLocations.find(loc => loc.reportId === newAlertReport._id)!.building.coordinate
+                  ]}
+                  strokeColor="green"
+                  strokeWidth={3}
+                  lineDashPattern={[4, 6]}
+                />
+              )}
+
           </View>
         </View>
       </View>

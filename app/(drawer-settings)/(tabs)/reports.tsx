@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { Upload, Video, Trash2, User, Check, Clock } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
@@ -10,6 +10,8 @@ import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 
 import { getDeviceId } from '@/utils/device';
+
+import io from 'socket.io-client';
 
 // Define Report type for TypeScript safety
 interface Report {
@@ -36,6 +38,8 @@ export default function ReportsScreen() {
   const [selectedType, setSelectedType] = useState<string>('Fire');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Stray Dogs','Other'];
 
@@ -45,6 +49,8 @@ export default function ReportsScreen() {
     'San Antonio', 'San Joaquin', 'San Jose', 'San Nicolas', 'Santa Cruz', 
     'Santa Lucia', 'Santa Rosa', 'Santolan', 'Sumilang', 'Ugong', 'Bagong Bayan'
   ];
+
+  const socket = io("https://safepasig-backend.onrender.com");
 
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
@@ -58,7 +64,7 @@ export default function ReportsScreen() {
     const deviceId = await getDeviceId();
 
     if (!selectedBrgy || !street) return Alert.alert('OOPS!', 'Please fill required fields');
-    if (!imageUri) return Alert.alert('OOPS!', 'Please provide an image or video for proof!');
+    if (!imageUri) return Alert.alert('OOPS!', 'Please provide an image or video for proof!, to avoid trolling.');
     if (isSubmitting) return;
     
     setIsSubmitting(true);
@@ -112,8 +118,7 @@ export default function ReportsScreen() {
     }
   };
 
-  // --- Fast, safe, one-by-one fetching ---
-  const fetchReports = async () => {
+ const fetchReports = async () => {
     setIsLoadingReports(true);
     try {
       const res = await fetch('https://safepasig-backend.onrender.com/reports');
@@ -124,22 +129,8 @@ export default function ReportsScreen() {
         .filter(report => report && report._id)
         .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-      setReportsData([]); // clear previous
-
-      // Add reports one by one quickly
-      let i = 0;
-      const addNext = () => {
-        if (i < sortedReports.length) {
-          const report = sortedReports[i];
-          if (report && report._id) { // ✅ only add valid reports
-            setReportsData(prev => [...prev, report]);
-          }
-          i++;
-          setTimeout(addNext, 20);
-        }
-      };
-
-      addNext();
+      // Render all at once — much faster
+      setReportsData(sortedReports);
 
     } catch (err) {
       console.error(err);
@@ -148,6 +139,7 @@ export default function ReportsScreen() {
       setIsLoadingReports(false);
     }
   };
+
 
   useEffect(() => {
     console.log("Fetching reports...");
@@ -168,6 +160,18 @@ export default function ReportsScreen() {
       ]
     );
   };
+
+  useEffect(() => {
+  // Listen for deleted reports
+    socket.on("report-deleted", (data: { id: string }) => {
+      setReportsData(prev => prev.filter(r => r._id !== data.id));
+    });
+
+    return () => {
+      socket.off("report-deleted");
+    };
+  }, []);
+
 
   const deleteReport = async (reportId: string) => {
     try {
@@ -198,10 +202,33 @@ export default function ReportsScreen() {
     }
   };
 
+  const onRefreshReports = async () => {
+    setIsRefreshing(true);
+    await Promise.all([
+      fetchReports(),
+      new Promise(resolve => setTimeout(resolve, 3000))  
+    ]);
+
+    setIsRefreshing(false);
+  };
+
+
   return (
     <View style={reportsStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()} />
-      <ScrollView style={reportsStyles.scrollView} contentContainerStyle={reportsStyles.content}>
+      <ScrollView
+          style={reportsStyles.scrollView}
+          contentContainerStyle={reportsStyles.content}
+          refreshControl={
+            <RefreshControl
+              refreshing={isRefreshing}
+              onRefresh={onRefreshReports}
+              colors={['#3B82F6']}
+              tintColor="#3B82F6"
+            />
+          }
+        >
+
         <Text style={reportsStyles.pageTitle}>User Reports</Text>
 
         {/* Submit Report */}
