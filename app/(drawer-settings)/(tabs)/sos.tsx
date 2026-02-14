@@ -7,6 +7,7 @@ import * as Location from 'expo-location';
 import call from 'react-native-phone-call';
 import { useEffect, useState } from 'react';
 import { io } from "socket.io-client";
+import { getDeviceId } from '@/utils/device';
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
@@ -38,6 +39,7 @@ export default function SOSScreen() {
   };
 
   const triggerSOS = async () => {
+    const deviceId = await getDeviceId();
     Vibration.vibrate([500, 500, 500]);
 
     const { status } = await Location.requestForegroundPermissionsAsync();
@@ -56,7 +58,10 @@ export default function SOSScreen() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(coords),
+        body: JSON.stringify({
+          deviceId,
+          coords
+        }),
       });
 
       const data = await response.json();
@@ -94,7 +99,7 @@ export default function SOSScreen() {
         <Text style={SosStyles.pageTitle}>Emergency SOS</Text>
 
         <Text style={SosStyles.description}>
-          Press the SOS button to alert government institutions and nearby users. Your location will be shared.
+          Press the SOS button to alert nearby users around Pasig District. Your location will be shared.
         </Text>
 
         <View style={SosStyles.sosSection}>
@@ -133,15 +138,15 @@ export default function SOSScreen() {
             </View>
             <View style={SosStyles.featureItem}>
               <View style={SosStyles.featureDot} />
-              <Text style={SosStyles.featureText}>Voice activation ready</Text>
+              <Text style={SosStyles.featureText}>SOS Trigger quicly</Text>
             </View>
             <View style={SosStyles.featureItem}>
               <View style={SosStyles.featureDot} />
-              <Text style={SosStyles.featureText}>Offline mode available</Text>
+              <Text style={SosStyles.featureText}>Other users will see your SOS or report</Text>
             </View>
             <View style={SosStyles.featureItem}>
               <View style={SosStyles.featureDot} />
-              <Text style={SosStyles.featureText}>Auto-dial emergency services</Text>
+              <Text style={SosStyles.featureText}>Auto-dial for emergency services by just clicking and it will move you to the dial phone</Text>
             </View>
           </View>
         </View>

@@ -1,15 +1,15 @@
 import { View, Text, TouchableOpacity, Image, ActivityIndicator, Animated, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { MapPin, Layers, Building, Plus, Minus, X } from 'lucide-react-native';
+import { MapPin, Layers, Building, Plus, Minus, X, SirenIcon, HouseIcon, School } from 'lucide-react-native';
 import { mapStyles } from '@/app/appStyles/map.style';
 import { useNavigation, useLocalSearchParams } from 'expo-router';
-import MapView, { Marker } from 'react-native-maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { pasigGovBuildings } from '@/app/components/objects/mapsObj';
 import * as Location from 'expo-location';
 import { useEffect, useRef, useState } from 'react';
 import { disasterPinImages } from '@/app/components/objects/disasterPins';
+import { valleyFaultLines } from '@/app/components/objects/faultLines';
 import { io } from "socket.io-client";
-import { parse } from 'react-native-svg';
 
 export default function MapScreen() {
   const navigation = useNavigation<any>();
@@ -77,6 +77,7 @@ export default function MapScreen() {
           ...r,
           latitude: parseFloat(r.latitude),
           longitude: parseFloat(r.longitude),
+          deviceId: r.deviceId,
         }));
 
         if (newReport && !reports.find((r: any) => r._id === newReport._id)) {
@@ -231,6 +232,7 @@ export default function MapScreen() {
             </Text>
             <Text style={{ color: '#fff', marginTop: 4 }}>
               {newAlertReport.type}: {newAlertReport.description}
+              {newAlertReport.deviceId ? `\nDevice ID: ${newAlertReport.deviceId}` : ''}
             </Text>
             <TouchableOpacity
               style={{ position: 'absolute', top: 8, right: 8 }}
@@ -255,13 +257,24 @@ export default function MapScreen() {
             longitudeDelta: 0.002,
           }}
         >
+
+          {valleyFaultLines.map((fault, idx) => (
+            <Polyline
+              key={`fault-${idx}`}
+              coordinates={fault.coordinates}
+              strokeColor="rgba(255, 115, 0, 0.89)"  
+              strokeWidth={3}
+              lineDashPattern={[6, 8]} 
+            />
+          ))}
+
           {reportData.filter(report => report && report._id)
             .map((report, index) => (
             <Marker
               key={`${report._id}-${index}`}
               coordinate={{ latitude: report.latitude, longitude: report.longitude }}
-              title={report.type}
-              description={report.description}
+              title={`${report.type} | ${report.deviceId}`}
+              description={report.description} 
             >
               <View style={{ alignItems: 'center' }}>
                 {loadingMarkers.includes(report._id) ? (
@@ -317,7 +330,7 @@ export default function MapScreen() {
               <View style={{ alignItems: 'center' }}>
                 <View
                   style={{
-                    backgroundColor: '#DC2626',
+                    backgroundColor: '#26dcd0',
                     width: 24,
                     height: 24,
                     borderRadius: 20,
@@ -326,7 +339,19 @@ export default function MapScreen() {
                     elevation: 6,
                   }}
                 >
-                  <Building color="white" size={15} />
+                  {build.type === 'police' ? (
+                    <SirenIcon color="white" size={15} />
+                  ) : build.type === 'cityHall' ? (
+                    <Building color="white" size={15} />
+                  ) : build.type === 'barangay' ? (
+                    <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                      <HouseIcon size={15} color={'white'}/>
+                    </Text>
+                  ) : build.type === 'school' ? (
+                    <Text style={{ color: 'white', fontSize: 10, fontWeight: 'bold' }}>
+                      <School color={'white'} size={15} />
+                    </Text>
+                  ) : null}
                 </View>
                 <View
                   style={{
@@ -337,13 +362,14 @@ export default function MapScreen() {
                     borderTopWidth: 12,
                     borderLeftColor: 'transparent',
                     borderRightColor: 'transparent',
-                    borderTopColor: '#DC2626',
+                    borderTopColor: '#26dcd0',
                     marginTop: -5,
                   }}
                 />
               </View>
             </Marker>
           ))}
+
         </MapView>
 
         <TouchableOpacity
@@ -413,9 +439,6 @@ export default function MapScreen() {
         >
           <Text style={{ color: '#fff', fontWeight: 'bold' }}>Reload Map</Text>
         </TouchableOpacity>
-
-
-        
 
         <View style={mapStyles.zoomControls}>
           <TouchableOpacity style={mapStyles.zoomButton} onPress={zoomIn}><Plus size={20} color="#3B82F6" /></TouchableOpacity>

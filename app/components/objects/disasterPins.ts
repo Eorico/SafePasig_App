@@ -6,5 +6,6 @@ export const disasterPinImages: { [ key: string ]: any } = {
     Storm: require('@/assets/images/storm.png'),
     Accident: require('@/assets/images/accident.png'),
     Emergency: require('@/assets/images/emergency.png'),
+    StrayDogs: require('@/assets/images/strayDogs.png'),
     Other: require('@/assets/images/accident.png'),
 }

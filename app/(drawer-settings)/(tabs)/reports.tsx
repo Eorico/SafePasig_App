@@ -9,9 +9,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 
+import { getDeviceId } from '@/utils/device';
+
 // Define Report type for TypeScript safety
 interface Report {
   _id: string;
+  deviceId: string;
   type: string;
   description: string;
   barangay?: string;
@@ -34,7 +37,7 @@ export default function ReportsScreen() {
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
 
-  const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Other'];
+  const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Stray Dogs','Other'];
 
   const barangays = [
     'Bagong Ilog', 'Bagong Katipunan', 'Bambang', 'Kapitolyo', 'Karangalan', 
@@ -52,9 +55,12 @@ export default function ReportsScreen() {
   };
 
   const submitReport = async () => {
-    if (!selectedBrgy || !street) return Alert.alert('Error', 'Please fill required fields');
-    if (isSubmitting) return;
+    const deviceId = await getDeviceId();
 
+    if (!selectedBrgy || !street) return Alert.alert('OOPS!', 'Please fill required fields');
+    if (!imageUri) return Alert.alert('OOPS!', 'Please provide an image or video for proof!');
+    if (isSubmitting) return;
+    
     setIsSubmitting(true);
 
     try {
@@ -65,6 +71,7 @@ export default function ReportsScreen() {
       const { latitude, longitude } = geocoded[0];
 
       const form = new FormData();
+      form.append('deviceId', deviceId);
       form.append('type', selectedType);
       form.append('description', `${street}, ${selectedBrgy}`);
       form.append('barangay', selectedBrgy);
@@ -274,6 +281,7 @@ export default function ReportsScreen() {
                 key={report._id || index}
                 onPress={() => navigation.navigate('map', {
                   focusReport: JSON.stringify({
+                    deviceId: report.deviceId,
                     latitude: report.latitude,
                     longitude: report.longitude,
                     type: report.type,
@@ -314,7 +322,9 @@ export default function ReportsScreen() {
                   </View>
 
                   <View style={reportsStyles.reportContent}>
+                    <Text style={reportsStyles.locationText}>TYPE: {report.type}</Text>
                     <Text style={reportsStyles.locationText}>{report.description}</Text>
+                    <Text style={reportsStyles.locationText}>DEVICE ID: {report.deviceId}</Text>
                     <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
                   </View>
 

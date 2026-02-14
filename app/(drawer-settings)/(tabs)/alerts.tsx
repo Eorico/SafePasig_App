@@ -29,6 +29,7 @@ export default function AlertsScreen() {
       setDisasterReports(prev => [
         {
           _id: data._id,
+          deviceId: data.deviceId,
           type: data.type,
           description: data.description,
           latitude: parseFloat(data.latitude),
@@ -268,7 +269,10 @@ export default function AlertsScreen() {
                   <X size={20} color="#FFFFFF" onPress={() => dismissReportAlert(report._id)}/>
                 </TouchableOpacity>
               </View>
-              <Text style={alertStyles.alertDescription}>{report.description}</Text>
+              <Text style={alertStyles.alertDescription}>LATITUDE: {report.latitude}</Text>
+              <Text style={alertStyles.alertDescription}>LONGITUDE: {report.longitude}</Text>
+              <Text style={alertStyles.alertDescription}>LOCATION: {report.description}</Text>
+              <Text style={alertStyles.alertDescription}>DEVICE ID: {report.deviceId}</Text>
               <Text style={[alertStyles.timeText, { marginTop: 8 }]}>{new Date(report.createdAt).toLocaleString()}</Text>
             </View>
           ))

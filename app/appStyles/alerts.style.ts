@@ -46,6 +46,7 @@ export const alertStyles = StyleSheet.create({
     fontWeight: '700',
     color: '#FFFFFF',
     flex: 1,
+    textAlign: 'center'
   },
   closeButton: {
     padding: 4,
