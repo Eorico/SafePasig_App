@@ -11,6 +11,32 @@ export default function DrawerLayout() {
   const [pwdProfile, setPwdProfile] = useState(false);
   const [autoLocation, setAutoLocation] = useState(false);
 
+  const togglePWDProfile = async (value: boolean) => {
+    setPwdProfile(value); // update UI immediately
+
+    try {
+      const res = await fetch("https://safepasig-backend.onrender.com/reports/pwd/all", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isPWD: value }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        alert("Failed to update PWD for all reports.");
+        setPwdProfile(!value); // revert UI
+      } else {
+        console.log(`Updated PWD for ${data.modifiedCount} reports`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Error updating PWD for all reports.");
+      setPwdProfile(!value); // revert UI
+    }
+  };
+
+
   const CustomDrawerContent = () => (
     <ScrollView style={drawerStyles.drawerContainer} contentContainerStyle={{ padding: 8, marginTop: 20 }}>
       <View>
@@ -48,7 +74,7 @@ export default function DrawerLayout() {
       <Text style={drawerStyles.sectionTitle}>User Profile</Text>
       <View style={drawerStyles.row}>
         <Text>PWD</Text>
-        <Switch value={pwdProfile} onValueChange={setPwdProfile} />
+        <Switch value={pwdProfile} onValueChange={togglePWDProfile} />
       </View>
       <View style={drawerStyles.row}>
         <Text>Auto Location Sharing</Text>

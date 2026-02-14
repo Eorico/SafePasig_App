@@ -24,10 +24,6 @@ export default function Header({ onMenuPress }: HeaderProps) {
           <Text style={headerStyles.subtitle}>Disaster Response System</Text>
         </View>
 
-        <View style={headerStyles.badge}>
-          <Shield size={16} color="#3B82F6" />
-          <Text style={headerStyles.badgeText}>PWD</Text>
-        </View>
       </View>
     </ImageBackground>
   );

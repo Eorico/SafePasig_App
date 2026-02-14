@@ -56,7 +56,7 @@ export const headerStyles = StyleSheet.create({
     gap: 4,
   },
   badgeText: {
-    color: '#3B82F6',
+    color: '#f8f8f8',
     fontSize: 12,
     fontWeight: '700',
   },
