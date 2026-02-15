@@ -3,13 +3,11 @@ import Header from '@/app/components/ui/header';
 import { Phone, Copy } from 'lucide-react-native';
 import { hotlinesStyles } from '@/app/appStyles/hotlines.style';
 import { hotlines } from '@/app/components/objects/hotlinesObjs';
-import { useNavigation } from 'expo-router';
 import { getCategoryColor } from '@/app/functionalities/hotlines/hotlinesColor.img';
 import * as Clipboard from 'expo-clipboard';
 import call from 'react-native-phone-call';
 
 export default function HotlinesScreen() {
-  const navigation = useNavigation<any>();
 
   const handleCall = (number: string) => {
     const args = {
@@ -26,7 +24,7 @@ export default function HotlinesScreen() {
 
   return (
     <View style={hotlinesStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()}/>
+      <Header/>
       <ScrollView style={hotlinesStyles.scrollView} contentContainerStyle={hotlinesStyles.content}>
         <Text style={hotlinesStyles.pageTitle}>Emergency Hotlines</Text>
 

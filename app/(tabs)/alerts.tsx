@@ -2,14 +2,12 @@ import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, ImageBackg
 import Header from '@/app/components/ui/header';
 import { X, CloudRain, Sun } from 'lucide-react-native';
 import { alertStyles } from '@/app/appStyles/alerts.style';
-import { useNavigation } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { XMLParser } from 'fast-xml-parser';
 import { getAlertColor, ALERT_COLORS } from '@/app/functionalities/alerts/alertsColor.img';
 import { io } from "socket.io-client";
 
 export default function AlertsScreen() {
-  const navigation = useNavigation<any>();
   const [weather, setWeather] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(true);
   const [loadingTyphoon, setLoadingTyphoon] = useState(true);
@@ -139,7 +137,7 @@ export default function AlertsScreen() {
 
   return (
     <View style={alertStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()} />
+      <Header />
       <ScrollView style={alertStyles.scrollView} contentContainerStyle={alertStyles.content}>
         <Text style={alertStyles.pageTitle}>Active Alerts</Text>
 

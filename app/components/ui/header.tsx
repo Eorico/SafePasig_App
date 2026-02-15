@@ -1,9 +1,8 @@
 import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
 import { Shield, Settings2 } from 'lucide-react-native';
-import { HeaderProps } from '@/app/entities/header.props';
 import { headerStyles } from '@/app/appStyles/header.style';
 
-export default function Header({ onMenuPress }: HeaderProps) {
+export default function Header() {
   return (
     <ImageBackground
       source={require('@/assets/images/pasigbg.png')} // your image
@@ -15,8 +14,8 @@ export default function Header({ onMenuPress }: HeaderProps) {
 
       {/* Header content */}
       <View style={headerStyles.content}>
-        <TouchableOpacity onPress={onMenuPress} style={headerStyles.menuButton}>
-          <Settings2 size={24} color="#FFFFFF" />
+        <TouchableOpacity  style={headerStyles.menuButton}>
+          <Shield size={24} color="#FFFFFF" />
         </TouchableOpacity>
 
         <View style={headerStyles.titleContainer}>

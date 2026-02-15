@@ -240,7 +240,7 @@ export default function MapScreen() {
 
   return (
     <View style={mapStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()} />
+      <Header  />
 
         {newAlertReport && (
           <View style={{

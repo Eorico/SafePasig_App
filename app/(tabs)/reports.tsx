@@ -195,7 +195,7 @@ export default function ReportsScreen() {
 
   return (
     <View style={reportsStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()} />
+      <Header  />
       <ScrollView
         style={reportsStyles.scrollView}
         contentContainerStyle={reportsStyles.content}

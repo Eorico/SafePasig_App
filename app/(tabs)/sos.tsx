@@ -2,7 +2,7 @@ import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration } from 'reac
 import Header from '@/app/components/ui/header';
 import { AlertCircle, Phone } from 'lucide-react-native';
 import { SosStyles } from '@/app/appStyles/sos.style';
-import { useNavigation } from 'expo-router';
+ 
 import * as Location from 'expo-location';
 import call from 'react-native-phone-call';
 import { useEffect, useState } from 'react';
@@ -11,7 +11,7 @@ import { getDeviceId } from '@/utils/device';
 
 
 export default function SOSScreen() {
-  const navigation = useNavigation<any>();
+   
   const [, setLoc] = useState<{ latitude: number; longitude: number } | null>(null);
   const [soundAlerts,] = useState(true); // optional: integrate from Drawer later
   const socket = io("https://safepasig-backend.onrender.com");
@@ -84,7 +84,7 @@ export default function SOSScreen() {
 
   return (
     <View style={SosStyles.container}>
-      <Header onMenuPress={() => navigation.openDrawer()}/>
+      <Header />
       <ScrollView style={SosStyles.scrollView} contentContainerStyle={SosStyles.content}>
         <Text style={SosStyles.pageTitle}>Emergency SOS</Text>
 
