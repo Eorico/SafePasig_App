@@ -12,17 +12,6 @@ import io from 'socket.io-client';
 import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 
-// Configure notifications
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: false,
-    shouldShowList: false,
-  }),
-});
-
 // Define Report type for TypeScript safety
 interface Report {
   _id: string;
@@ -62,6 +51,17 @@ export default function ReportsScreen() {
   ];
 
   const socket = io("https://safepasig-backend.onrender.com");
+
+  useEffect(() => {})
+    Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,
+      shouldPlaySound: true,
+      shouldSetBadge: false,
+      shouldShowBanner: false,
+      shouldShowList: false,
+    }),
+  });
 
   // Register push notifications
   const registerForPushNotifications = async () => {

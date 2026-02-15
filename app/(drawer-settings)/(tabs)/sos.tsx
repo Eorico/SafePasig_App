@@ -11,16 +11,6 @@ import * as Notifications from 'expo-notifications';
 import Constants from 'expo-constants';
 import { getDeviceId } from '@/utils/device';
 
-// Configure notification handler
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-    shouldShowBanner: false,
-    shouldShowList: false,
-  }),
-});
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
@@ -28,6 +18,19 @@ export default function SOSScreen() {
   const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
   const [soundAlerts, setSoundAlerts] = useState(true); // optional: integrate from Drawer later
   const socket = io("https://safepasig-backend.onrender.com");
+
+  useEffect(() => {
+    // Configure notification handler
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+        shouldShowBanner: false,
+        shouldShowList: false,
+      }),
+    });
+  })
 
   // Listen for SOS alerts via socket
   useEffect(() => {
