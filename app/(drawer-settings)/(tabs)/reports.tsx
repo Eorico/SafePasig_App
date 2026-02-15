@@ -52,16 +52,17 @@ export default function ReportsScreen() {
 
   const socket = io("https://safepasig-backend.onrender.com");
 
-  useEffect(() => {})
-    Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,
-      shouldPlaySound: true,
-      shouldSetBadge: false,
-      shouldShowBanner: false,
-      shouldShowList: false,
-    }),
-  });
+  useEffect(() => {
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: false,
+          shouldShowList: false,
+        }),
+      });
+    },[]);
 
   // Register push notifications
   const registerForPushNotifications = async () => {
@@ -80,7 +81,9 @@ export default function ReportsScreen() {
       return;
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId: Constants.expoConfig?.extra?.eas?.projectId,
+    });
     setExpoPushToken(tokenData.data);
 
     const deviceId = await getDeviceId();

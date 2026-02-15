@@ -29,7 +29,7 @@ export default function DrawerLayout() {
         shouldShowList: false,
       }),
     });
-  });
+  },[]);
 
   // Register device for push notifications
   const registerForPushNotifications = async () => {
@@ -53,7 +53,9 @@ export default function DrawerLayout() {
         return;
       }
 
-      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const tokenData = await Notifications.getExpoPushTokenAsync({
+        projectId: Constants.expoConfig?.extra?.eas?.projectId,
+      });
       const expoPushToken = tokenData.data;
 
       const deviceId = await getDeviceId();

@@ -20,17 +20,16 @@ export default function SOSScreen() {
   const socket = io("https://safepasig-backend.onrender.com");
 
   useEffect(() => {
-    // Configure notification handler
-    Notifications.setNotificationHandler({
-      handleNotification: async () => ({
-        shouldShowAlert: true,
-        shouldPlaySound: true,
-        shouldSetBadge: false,
-        shouldShowBanner: false,
-        shouldShowList: false,
-      }),
-    });
-  })
+      Notifications.setNotificationHandler({
+        handleNotification: async () => ({
+          shouldShowAlert: true,
+          shouldPlaySound: true,
+          shouldSetBadge: false,
+          shouldShowBanner: false,
+          shouldShowList: false,
+        }),
+      });
+    },[]);
 
   // Listen for SOS alerts via socket
   useEffect(() => {
@@ -66,7 +65,9 @@ export default function SOSScreen() {
       return;
     }
 
-    const tokenData = await Notifications.getExpoPushTokenAsync();
+    const tokenData = await Notifications.getExpoPushTokenAsync({
+      projectId: Constants.expoConfig?.extra?.eas?.projectId,
+    });
     setExpoPushToken(tokenData.data);
 
     // Send token to backend
