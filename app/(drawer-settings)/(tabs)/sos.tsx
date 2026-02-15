@@ -7,29 +7,15 @@ import * as Location from 'expo-location';
 import call from 'react-native-phone-call';
 import { useEffect, useState } from 'react';
 import { io } from "socket.io-client";
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 import { getDeviceId } from '@/utils/device';
 
 
 export default function SOSScreen() {
   const navigation = useNavigation<any>();
-  const [loc, setLoc] = useState<{ latitude: number; longitude: number } | null>(null);
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
-  const [soundAlerts, setSoundAlerts] = useState(true); // optional: integrate from Drawer later
+  const [, setLoc] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [soundAlerts,] = useState(true); // optional: integrate from Drawer later
   const socket = io("https://safepasig-backend.onrender.com");
-
-  useEffect(() => {
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-          shouldShowBanner: false,
-          shouldShowList: false,
-        }),
-      });
-    },[]);
+ 
 
   // Listen for SOS alerts via socket
   useEffect(() => {
@@ -43,50 +29,6 @@ export default function SOSScreen() {
     return () => {
       socket.off("sos");
     };
-  }, [soundAlerts]);
-
-  // Register device for push notifications
-  const registerForPushNotifications = async () => {
-    if (!Constants.isDevice) {
-      Alert.alert('Push Notifications require a physical device');
-      return;
-    }
-
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      Alert.alert('Failed to get push token for push notifications');
-      return;
-    }
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig?.extra?.eas?.projectId,
-    });
-    setExpoPushToken(tokenData.data);
-
-    // Send token to backend
-    const deviceId = await getDeviceId();
-    await fetch('https://safepasig-backend.onrender.com/notifications/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId, expoPushToken: tokenData.data }),
-    });
-  };
-
-  // Listen for notifications while app is foregrounded
-  useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      Alert.alert('Notification', notification.request.content.body || '');
-      if (soundAlerts) Vibration.vibrate([500, 500, 500]);
-    });
-
-    return () => subscription.remove();
   }, [soundAlerts]);
 
   const getUserLoc = async () => {
@@ -104,7 +46,6 @@ export default function SOSScreen() {
     const deviceId = await getDeviceId();
 
     Vibration.vibrate([500, 500, 500]);
-    await registerForPushNotifications(); // ensure push notifications are registered
 
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== 'granted') {

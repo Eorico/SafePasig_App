@@ -9,8 +9,6 @@ import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
 import { getDeviceId } from '@/utils/device';
 import io from 'socket.io-client';
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
 
 // Define Report type for TypeScript safety
 interface Report {
@@ -39,7 +37,6 @@ export default function ReportsScreen() {
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pwdProfile, setPwdProfile] = useState(false);
-  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Stray Dogs','Other'];
 
@@ -52,60 +49,6 @@ export default function ReportsScreen() {
 
   const socket = io("https://safepasig-backend.onrender.com");
 
-  useEffect(() => {
-      Notifications.setNotificationHandler({
-        handleNotification: async () => ({
-          shouldShowAlert: true,
-          shouldPlaySound: true,
-          shouldSetBadge: false,
-          shouldShowBanner: false,
-          shouldShowList: false,
-        }),
-      });
-    },[]);
-
-  // Register push notifications
-  const registerForPushNotifications = async () => {
-    if (!Constants.isDevice) return;
-
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-
-    if (existingStatus !== 'granted') {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-
-    if (finalStatus !== 'granted') {
-      Alert.alert('Push notifications not granted');
-      return;
-    }
-
-    const tokenData = await Notifications.getExpoPushTokenAsync({
-      projectId: Constants.expoConfig?.extra?.eas?.projectId,
-    });
-    setExpoPushToken(tokenData.data);
-
-    const deviceId = await getDeviceId();
-    await fetch('https://safepasig-backend.onrender.com/notifications/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ deviceId, expoPushToken: tokenData.data }),
-    });
-  };
-
-  useEffect(() => {
-    registerForPushNotifications();
-  }, []);
-
-  // Handle incoming push notifications
-  useEffect(() => {
-    const subscription = Notifications.addNotificationReceivedListener(notification => {
-      Alert.alert('New Report', notification.request.content.body || '');
-      Vibration.vibrate([500, 500, 500]);
-    });
-    return () => subscription.remove();
-  }, []);
 
   // Socket: Listen for new reports in real-time
   useEffect(() => {
