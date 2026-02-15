@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Safe Pasig",
-    "slug": "SafePasig",
+    "slug": "SafePasigApp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/pasigLogo.png",

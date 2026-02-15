@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { AlertCircle, Phone } from 'lucide-react-native';
 import { SosStyles } from '@/app/appStyles/sos.style';

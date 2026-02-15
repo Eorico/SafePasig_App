@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl, Vibration, Platform } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { Upload, Video, Trash2, User, Check, Clock } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
