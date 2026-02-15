@@ -1,17 +1,27 @@
-import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl, Vibration, Platform } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { Upload, Video, Trash2, User, Check, Clock } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
 import * as ImagePicker from 'expo-image-picker';
-
 import { useState, useEffect } from 'react';
 import { Picker } from '@react-native-picker/picker';
-
 import { getDeviceId } from '@/utils/device';
-
 import io from 'socket.io-client';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
+
+// Configure notifications
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: false,
+    shouldShowBanner: false,
+    shouldShowList: false,
+  }),
+});
 
 // Define Report type for TypeScript safety
 interface Report {
@@ -31,7 +41,6 @@ interface Report {
 
 export default function ReportsScreen() {
   const navigation = useNavigation<any>();
-
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [reportsData, setReportsData] = useState<Report[]>([]);
   const [selectedBrgy, setSelectedBrgy] = useState<string | null>(null);
@@ -41,6 +50,7 @@ export default function ReportsScreen() {
   const [isLoadingReports, setIsLoadingReports] = useState<boolean>(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [pwdProfile, setPwdProfile] = useState(false);
+  const [expoPushToken, setExpoPushToken] = useState<string | null>(null);
 
   const disasterTypes = ['Fire', 'Flood', 'Landslide', 'Earthquake', 'Storm', 'Accident', 'Emergency', 'Stray Dogs','Other'];
 
@@ -53,6 +63,65 @@ export default function ReportsScreen() {
 
   const socket = io("https://safepasig-backend.onrender.com");
 
+  // Register push notifications
+  const registerForPushNotifications = async () => {
+    if (!Constants.isDevice) return;
+
+    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+
+    if (existingStatus !== 'granted') {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+
+    if (finalStatus !== 'granted') {
+      Alert.alert('Push notifications not granted');
+      return;
+    }
+
+    const tokenData = await Notifications.getExpoPushTokenAsync();
+    setExpoPushToken(tokenData.data);
+
+    const deviceId = await getDeviceId();
+    await fetch('https://safepasig-backend.onrender.com/notifications/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ deviceId, expoPushToken: tokenData.data }),
+    });
+  };
+
+  useEffect(() => {
+    registerForPushNotifications();
+  }, []);
+
+  // Handle incoming push notifications
+  useEffect(() => {
+    const subscription = Notifications.addNotificationReceivedListener(notification => {
+      Alert.alert('New Report', notification.request.content.body || '');
+      Vibration.vibrate([500, 500, 500]);
+    });
+    return () => subscription.remove();
+  }, []);
+
+  // Socket: Listen for new reports in real-time
+  useEffect(() => {
+    socket.on("new-report", (data: Report) => {
+      setReportsData(prev => [data, ...prev]);
+      Alert.alert('New Report', `A new report has been submitted: ${data.type}`);
+      Vibration.vibrate([500, 500]);
+    });
+
+    socket.on("report-deleted", (data: { id: string }) => {
+      setReportsData(prev => prev.filter(r => r._id !== data.id));
+    });
+
+    return () => {
+      socket.off("new-report");
+      socket.off("report-deleted");
+    };
+  }, []);
+
   const pickMedia = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ImagePicker.MediaTypeOptions.All,
@@ -61,13 +130,28 @@ export default function ReportsScreen() {
     if (!result.canceled) setImageUri(result.assets[0].uri);
   };
 
+  const fetchReports = async () => {
+    setIsLoadingReports(true);
+    try {
+      const res = await fetch('https://safepasig-backend.onrender.com/reports');
+      const data: Report[] = await res.json();
+      setReportsData(
+        data.filter(Boolean).sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      );
+    } catch (err) {
+      console.error(err);
+      Alert.alert('Error', 'Failed to load reports');
+    } finally {
+      setIsLoadingReports(false);
+    }
+  };
+
   const submitReport = async () => {
     const deviceId = await getDeviceId();
-
     if (!selectedBrgy || !street) return Alert.alert('OOPS!', 'Please fill required fields');
-    if (!imageUri) return Alert.alert('OOPS!', 'Please provide an image or video for proof!, to avoid trolling.');
+    if (!imageUri) return Alert.alert('OOPS!', 'Please provide an image or video for proof!');
     if (isSubmitting) return;
-    
+
     setIsSubmitting(true);
 
     try {
@@ -107,8 +191,11 @@ export default function ReportsScreen() {
         setStreet('');
         setSelectedType('Fire');
 
-        fetchReports(); // refresh reports
+        fetchReports();
         navigation.navigate('map', { newReport: JSON.stringify(data.report) });
+
+        // Notify other users via socket
+        socket.emit('new-report', data.report);
       } else {
         Alert.alert('Error', 'Failed to submit report');
       }
@@ -120,60 +207,16 @@ export default function ReportsScreen() {
     }
   };
 
- const fetchReports = async () => {
-    setIsLoadingReports(true);
-    try {
-      const res = await fetch('https://safepasig-backend.onrender.com/reports');
-      const data: Report[] = await res.json();
-
-      // Filter invalid reports and sort newest first
-      const sortedReports = data
-        .filter(report => report && report._id)
-        .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-
-      // Render all at once — much faster
-      setReportsData(sortedReports);
-
-    } catch (err) {
-      console.error(err);
-      Alert.alert('Error', 'Failed to load reports');
-    } finally {
-      setIsLoadingReports(false);
-    }
-  };
-
-
-  useEffect(() => {
-    console.log("Fetching reports...");
-    fetchReports();
-  }, []);
-
   const confirmDeleteReport = (reportId: string) => {
     Alert.alert(
       'Confirm Delete',
       'Are you sure you want to delete this report?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { 
-          text: 'Delete', 
-          style: 'destructive', 
-          onPress: () => deleteReport(reportId) 
-        }
+        { text: 'Delete', style: 'destructive', onPress: () => deleteReport(reportId) }
       ]
     );
   };
-
-  useEffect(() => {
-  // Listen for deleted reports
-    socket.on("report-deleted", (data: { id: string }) => {
-      setReportsData(prev => prev.filter(r => r._id !== data.id));
-    });
-
-    return () => {
-      socket.off("report-deleted");
-    };
-  }, []);
-
 
   const deleteReport = async (reportId: string) => {
     try {
@@ -181,16 +224,7 @@ export default function ReportsScreen() {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' }
       });
-
-      if (!res.ok) {
-        const text = await res.text();
-        console.error('Server response:', text);
-        Alert.alert('Error', 'Failed to delete report.');
-        return;
-      }
-
       const data = await res.json();
-
       if (data.success) {
         setReportsData(prev => prev.filter(r => r && r._id !== reportId));
         navigation.navigate('map', { deletedReportId: reportId });
@@ -210,30 +244,27 @@ export default function ReportsScreen() {
       fetchReports(),
       new Promise(resolve => setTimeout(resolve, 3000))  
     ]);
-
     setIsRefreshing(false);
   };
-
 
   return (
     <View style={reportsStyles.container}>
       <Header onMenuPress={() => navigation.openDrawer()} />
       <ScrollView
-          style={reportsStyles.scrollView}
-          contentContainerStyle={reportsStyles.content}
-          refreshControl={
-            <RefreshControl
-              refreshing={isRefreshing}
-              onRefresh={onRefreshReports}
-              colors={['#3B82F6']}
-              tintColor="#3B82F6"
-            />
-          }
-        >
-
+        style={reportsStyles.scrollView}
+        contentContainerStyle={reportsStyles.content}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={onRefreshReports}
+            colors={['#3B82F6']}
+            tintColor="#3B82F6"
+          />
+        }
+      >
         <Text style={reportsStyles.pageTitle}>User Reports</Text>
 
-        {/* Submit Report */}
+        {/* Submit Report Card */}
         <View style={reportsStyles.submitCard}>
           <View style={reportsStyles.submitCardContent}>
             <Text style={reportsStyles.submitTitle}>Report a Disaster</Text>
@@ -241,11 +272,11 @@ export default function ReportsScreen() {
               Help your community by submitting verified images or videos of disasters
             </Text>
 
-            {/* Disaster Type Picker */}
+            {/* Type Pickers */}
             <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
                 selectedValue={selectedType}
-                onValueChange={(itemValue: any) => setSelectedType(itemValue)}
+                onValueChange={setSelectedType}
                 dropdownIconColor="#fff"
                 style={{ color: '#fff', backgroundColor: 'transparent' }}
               >
@@ -253,7 +284,6 @@ export default function ReportsScreen() {
               </Picker>
             </View>
 
-            {/* Person Type Picker */}
             <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
                 selectedValue={pwdProfile ? 'PWD' : 'Normal'}
@@ -266,11 +296,10 @@ export default function ReportsScreen() {
               </Picker>
             </View>
 
-            {/* Barangay Picker */}
             <View style={{ borderWidth: 1, borderColor: '#fff', borderRadius: 8, marginVertical: 10, overflow: 'hidden' }}>
               <Picker
                 selectedValue={selectedBrgy}
-                onValueChange={(itemValue: any) => setSelectedBrgy(itemValue)}
+                onValueChange={setSelectedBrgy}
                 dropdownIconColor="#fff"
                 style={{ color: '#fff', backgroundColor: 'transparent' }}
               >
@@ -344,15 +373,7 @@ export default function ReportsScreen() {
                           style={{ width: 50, height: 50, borderRadius: 8 }}
                         />
                       ) : (
-                        <View style={{ 
-                          width: 50, 
-                          height: 50, 
-                          borderRadius: 8, 
-                          backgroundColor: '#eee' ,
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                          }}
-                        >
+                        <View style={{ width: 50, height: 50, borderRadius: 8, backgroundColor: '#eee', alignItems: 'center', justifyContent: 'center' }}>
                           <User size={24} color="#333" />
                         </View>
                       )}
@@ -368,12 +389,10 @@ export default function ReportsScreen() {
                     <Text style={reportsStyles.locationText}>TYPE: {report.type}</Text>
                     <Text style={reportsStyles.locationText}>{report.description}</Text>
                     <Text style={reportsStyles.locationText}>DEVICE ID: {report.deviceId}</Text>
-                    {/* PWD badge */}
                     {report.isPWD && (
-                      <Text style={{ color: report.isPWD ? '#10B981' : '#fff', fontWeight: 'bold', marginTop: 4 }}>
-                        Person: {report.isPWD ? 'PWD' : 'Normal'}
+                      <Text style={{ color: '#10B981', fontWeight: 'bold', marginTop: 4 }}>
+                        Person: PWD
                       </Text>
-
                     )}
                     <Text style={reportsStyles.timeText}>{new Date(report.createdAt).toLocaleString()}</Text>
                   </View>
