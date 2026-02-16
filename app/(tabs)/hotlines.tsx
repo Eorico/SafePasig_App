@@ -8,20 +8,10 @@ import * as Clipboard from 'expo-clipboard';
 
 export default function HotlinesScreen() {
 
-  const handleCall = async (number: string) => {
-  // remove spaces, dashes, parentheses
-    const cleanedNumber = number.replace(/[^\d+]/g, '');
-
-    const url = `tel:${cleanedNumber}`;
-
-    const supported = await Linking.canOpenURL(url);
-    if (!supported) {
-      Alert.alert('Error', 'Calling is not supported on this device');
-      return;
-    }
-
-    await Linking.openURL(url);
-  };
+  const handleCall = (number: string) => {
+      const cleanedNumber = number.replace(/[^\d+]/g, '');
+      Linking.openURL(`tel:${cleanedNumber}`);
+    };
 
   const handleCopy = (number: string) => {
     Clipboard.setStringAsync(number);

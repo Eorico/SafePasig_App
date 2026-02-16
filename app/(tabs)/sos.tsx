@@ -81,20 +81,27 @@ export default function SOSScreen() {
     const number = "911";
     const url = `tel:${number}`;
 
-    const supported = await Linking.canOpenURL(url);
-    if (!supported) {
-      Alert.alert("Error", "Calling is not supported on this device");
-      return;
-    }
+    try {
+      // Check if the device can handle tel URLs
+      const supported = await Linking.canOpenURL(url);
+      if (!supported) {
+        Alert.alert("Error", "Calling is not supported on this device");
+        return;
+      }
 
-    Alert.alert(
-      "Emergency Call",
-      "You are about to call emergency services (911). Continue?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { text: "Call", onPress: () => Linking.openURL(url) }
-      ]
-    );
+      // Show confirmation alert before dialing
+      Alert.alert(
+        "Emergency Call",
+        "You are about to call emergency services (911). Continue?",
+        [
+          { text: "Cancel", style: "cancel" },
+          { text: "Call", onPress: () => Linking.openURL(url) } // Only open the dialer if confirmed
+        ]
+      );
+    } catch (error) {
+      console.error("Failed to initiate call:", error);
+      Alert.alert("Error", "Unable to make the call at this time.");
+    }
   };
 
   return (
