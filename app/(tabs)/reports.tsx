@@ -1,6 +1,6 @@
 import { View, Text, ScrollView, TouchableOpacity, TextInput, Alert, Image, ActivityIndicator, RefreshControl, Vibration } from 'react-native';
 import Header from '@/app/components/ui/header';
-import { Upload, Video, Trash2, User, Check, Clock } from 'lucide-react-native';
+import { Upload, Video, Trash2, User, CheckCheckIcon, Clock, XCircle } from 'lucide-react-native';
 import { reportsStyles } from '@/app/appStyles/reports.style';
 import { useNavigation } from 'expo-router';
 import * as Location from 'expo-location';
@@ -22,7 +22,7 @@ interface Report {
   longitude: number;
   mediaUrl?: string;
   isPWD?: boolean;
-  status?: 'Verified' | 'Pending';
+  status?: 'True' | 'False' | 'Pending';
   createdAt: string;
 }
 
@@ -193,6 +193,18 @@ export default function ReportsScreen() {
     setIsRefreshing(false);
   };
 
+  const renderStatusIcon = (status?: string) => {
+      switch (status?.toLowerCase()) {
+        case 'true':
+          return <CheckCheckIcon size={18} color="#059669" />; // ✔
+        case 'false':
+          return <XCircle size={18} color="#DC2626" />; // ❌ (red X look)
+        case 'pending':
+        default:
+          return <Clock size={18} color="#797b7d" />; // ⏳
+      }    
+  }
+
   return (
     <View style={reportsStyles.container}>
       <Header  />
@@ -326,7 +338,7 @@ export default function ReportsScreen() {
                     </View>
                     <View style={reportsStyles.statusBadge}>
                       <Text style={reportsStyles.statusIcon}>
-                        {report.status === 'Verified' ? <Check size={18} color="#059669" /> : <Clock size={18} color="#9CA3AF" />}
+                        {renderStatusIcon(report.status)}
                       </Text>
                     </View>
                   </View>
