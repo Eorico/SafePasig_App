@@ -133,7 +133,8 @@ export const reportsStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
-    borderColor: '#a39e9e',
+    borderColor: '#7b7676',
+    backgroundColor: '#fffefe'
   },
   verifiedBadge: {
     backgroundColor: '#10B981',
