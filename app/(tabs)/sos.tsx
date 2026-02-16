@@ -1,10 +1,10 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Vibration, Linking } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { AlertCircle, Phone } from 'lucide-react-native';
 import { SosStyles } from '@/app/appStyles/sos.style';
  
 import * as Location from 'expo-location';
-import call from 'react-native-phone-call';
+ 
 import { useEffect, useState } from 'react';
 import { io } from "socket.io-client";
 import { getDeviceId } from '@/utils/device';
@@ -77,9 +77,24 @@ export default function SOSScreen() {
     }
   };
 
-  const quickCall911 = () => {
-    const args = { number: '911', prompt: true };
-    call(args).catch(() => Alert.alert("Error", "Unable to call 911"));
+  const quickCall911 = async () => {
+    const number = "911";
+    const url = `tel:${number}`;
+
+    const supported = await Linking.canOpenURL(url);
+    if (!supported) {
+      Alert.alert("Error", "Calling is not supported on this device");
+      return;
+    }
+
+    Alert.alert(
+      "Emergency Call",
+      "You are about to call emergency services (911). Continue?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Call", onPress: () => Linking.openURL(url) }
+      ]
+    );
   };
 
   return (

@@ -1,20 +1,26 @@
-import { View, Text, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
 import Header from '@/app/components/ui/header';
 import { Phone, Copy } from 'lucide-react-native';
 import { hotlinesStyles } from '@/app/appStyles/hotlines.style';
 import { hotlines } from '@/app/components/objects/hotlinesObjs';
 import { getCategoryColor } from '@/app/functionalities/hotlines/hotlinesColor.img';
 import * as Clipboard from 'expo-clipboard';
-import call from 'react-native-phone-call';
 
 export default function HotlinesScreen() {
 
-  const handleCall = (number: string) => {
-    const args = {
-      number: number,
-      prompt: false,  
-    };
-    call(args).catch(() => Alert.alert('Error', 'Unable to place a call'));
+  const handleCall = async (number: string) => {
+  // remove spaces, dashes, parentheses
+    const cleanedNumber = number.replace(/[^\d+]/g, '');
+
+    const url = `tel:${cleanedNumber}`;
+
+    const supported = await Linking.canOpenURL(url);
+    if (!supported) {
+      Alert.alert('Error', 'Calling is not supported on this device');
+      return;
+    }
+
+    await Linking.openURL(url);
   };
 
   const handleCopy = (number: string) => {
