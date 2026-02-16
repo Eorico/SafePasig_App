@@ -59,7 +59,11 @@
       "reactCompiler": true
     },
     "extra": {
-      "router": {}
-    }
+      "router": {},
+      "eas": {
+        "projectId": "5e98da72-36a5-4378-9d89-22b10c5db336"
+      }
+    },
+    "owner": "eorico2006"
   }
 }
