@@ -77,31 +77,12 @@ export default function SOSScreen() {
     }
   };
 
-  const quickCall911 = async () => {
+  const quickCall911 = () => {
     const number = "911";
-    const url = `tel:${number}`;
-
-    try {
-      // Check if the device can handle tel URLs
-      const supported = await Linking.canOpenURL(url);
-      if (!supported) {
-        Alert.alert("Error", "Calling is not supported on this device");
-        return;
-      }
-
-      // Show confirmation alert before dialing
-      Alert.alert(
-        "Emergency Call",
-        "You are about to call emergency services (911). Continue?",
-        [
-          { text: "Cancel", style: "cancel" },
-          { text: "Call", onPress: () => Linking.openURL(url) } // Only open the dialer if confirmed
-        ]
-      );
-    } catch (error) {
-      console.error("Failed to initiate call:", error);
-      Alert.alert("Error", "Unable to make the call at this time.");
-    }
+    const cleanedNumber = number.replace(/[^\d+]/g, '');
+    Linking.openURL(`tel:${cleanedNumber}`).catch(() => {
+      Alert.alert("Error", "Calling is not supported on this device");
+    });
   };
 
   return (
