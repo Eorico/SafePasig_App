@@ -17,7 +17,7 @@ export default function NotFoundScreen() {
             if (router.canGoBack()) {
               router.back();
             } else {
-              router.replace("/(tabs)/map");
+              router.replace('/(tabs)/map');
             }
           })}
         >
