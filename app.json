@@ -28,7 +28,12 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.eoricodev12.SafePasig"
+      "package": "com.eoricodev12.SafePasig",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyBqH4EHbZVSvOoLBC8wgxKWsztVc_O4Bgg"
+        }
+      }
     },
     "web": {
       "output": "static",
