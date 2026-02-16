@@ -1,5 +1,5 @@
 import { View, Text, TouchableOpacity, ImageBackground } from 'react-native';
-import { Shield, Settings2 } from 'lucide-react-native';
+import { Shield } from 'lucide-react-native';
 import { headerStyles } from '@/app/appStyles/header.style';
 
 export default function Header() {
@@ -14,9 +14,9 @@ export default function Header() {
 
       {/* Header content */}
       <View style={headerStyles.content}>
-        <TouchableOpacity  style={headerStyles.menuButton}>
+        <Text  style={headerStyles.menuButton}>
           <Shield size={24} color="#FFFFFF" />
-        </TouchableOpacity>
+        </Text>
 
         <View style={headerStyles.titleContainer}>
           <Text style={headerStyles.title}>SafePasig</Text>
